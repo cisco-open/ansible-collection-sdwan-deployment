@@ -1,0 +1,38 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+
+# ROUTE_TABLE
+- name: Gather information about all route tables in VPC
+  amazon.aws.ec2_vpc_route_table_info:
+    filters:
+      vpc-id: "{{ aws_vpc_id }}"
+    region: "{{ aws_region }}"
+  register: route_tables_info
+
+- name: Disassociate route table
+  amazon.aws.ec2_vpc_route_table:
+    vpc_id: "{{ aws_vpc_id }}"
+    region: "{{ aws_region }}"
+    route_table_id: "{{ rt_item.route_table_id }}"
+    state: absent
+  loop: "{{ route_tables_info.route_tables }}"
+  loop_control:
+    index_var: my_idx
+    loop_var: rt_item
+    label: "Delete route table: {{ rt_item.route_table_id }}"
+  when: rt_item.associations | length == 0 or not rt_item.associations[0].main
+
+- name: Delete all route tables in the VPC
+  amazon.aws.ec2_vpc_route_table:
+    vpc_id: "{{ aws_vpc_id }}"
+    region: "{{ aws_region }}"
+    route_table_id: "{{ rt_item.route_table_id }}"
+    lookup: id
+    state: absent
+  loop: "{{ route_tables_info.route_tables }}"
+  loop_control:
+    index_var: my_idx
+    loop_var: rt_item
+    label: "Delete route table: {{ rt_item.route_table_id }}"
+  when: rt_item.associations | length == 0 or not rt_item.associations[0].main

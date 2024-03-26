@@ -1,0 +1,56 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+
+# EIP & NETWORK INTERFACES
+
+- name: Gather information about all network interfaces in the VPC
+  amazon.aws.ec2_eni_info:
+    filters:
+      vpc-id: "{{ aws_vpc_id }}"
+      "tag:Creator": "{{ aws_tag_creator }}"
+    region: "{{ aws_region }}"
+  register: enis
+
+- name: Disassociate and release network interfaces from EIPs
+  amazon.aws.ec2_eip:
+    state: absent
+    region: "{{ aws_region }}"
+    device_id: "{{ eni_item.network_interface_id }}"
+    in_vpc: true
+    release_on_disassociation: true
+  loop: "{{ enis.network_interfaces | selectattr('association', 'defined') | list }}"
+  loop_control:
+    loop_var: eni_item
+    label: "Disassociate: {{ eni_item.tags.Name }}"
+  when: item.association is defined
+  register: disassociated_eips
+
+# - name: Release EIPs
+#   amazon.aws.ec2_eip:
+#     state: absent
+#     region: "{{ aws_region }}"
+#     public_ip: "{{ item.association.public_ip }}"
+#   loop: "{{ disassociated_eips.results }}"
+
+- name: Gather information about all network interfaces in a VPC
+  amazon.aws.ec2_eni_info:
+    filters:
+      vpc-id: "{{ aws_vpc_id }}"
+      "tag:Creator": "{{ aws_tag_creator }}"
+    region: "{{ aws_region }}"
+  register: network_interfaces_info
+
+- name: Delete all network interfaces in the VPC
+  amazon.aws.ec2_eni:
+    eni_id: "{{ nic_item.id }}"
+    region: "{{ aws_region }}"
+    state: absent
+  loop: "{{ network_interfaces_info.network_interfaces }}"
+  loop_control:
+    loop_var: nic_item
+    label: "Delete NIC: {{ nic_item.tags.Name }}"
+  register: _enis_absent
+  retries: 3
+  delay: 5
+  until: _enis_absent is succeeded

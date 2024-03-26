@@ -1,0 +1,174 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+# For vManage:
+# 2 aws_network_interface
+# 2 aws_network_interface_attachment
+# 2 aws_eip
+# 1 ec2 instance
+
+
+# NICs
+- name: Filter required subnets for instance creation. Set aws_mgmt_subnet and aws_transport_subnet facts
+  ansible.builtin.set_fact:
+    aws_mgmt_subnet: "{{ aws_subnets_config | selectattr('tags.VPN', 'equalto', '512') | list | first }}"
+    aws_transport_subnet: "{{ aws_subnets_config | selectattr('tags.VPN', 'equalto', '0') | list | first }}"
+
+# Note that we don't have mechanism yet to detect if there are already required interfaces present on AWS for
+# that particular machine. We should include here some check to verify that they exist and skip if present,
+# because ec2_eni module is not so idempotent - meaning it required eni id to detect if it exists. We don't have it.
+- name: Create network interfaces for vManage
+  amazon.aws.ec2_eni:
+    subnet_id: "{{ subnet_item.id }}"
+    description: Network interface for SD-WAN Controller
+    security_groups: "{{ aws_security_group_config.group_id }}"
+    region: "{{ aws_region }}"
+    tags:
+      Name: "nic-{{ subnet_item.tags.Name }}"
+      Creator: "{{ aws_tag_creator }}"
+      Machine: "{{ hostname }}"
+      VPN: "{{ subnet_item.tags.VPN }}"
+  register: network_interfaces_vmanage
+  loop: "{{ [aws_mgmt_subnet, aws_transport_subnet] }}"
+  loop_control:
+    loop_var: subnet_item
+    label: "nic-{{ subnet_item.tags.Name }}"
+
+- name: Set aws_network_interfaces fact with a list of interfaces for vManage
+  ansible.builtin.set_fact:
+    aws_network_interfaces: "{{ network_interfaces_vmanage.results | map(attribute='interface') | list }}"
+
+- name: Filter aws_network_interfaces for instance creation. Set aws_mgmt_nic and aws_transport_nic facts
+  ansible.builtin.set_fact:
+    aws_mgmt_nic: "{{ aws_network_interfaces | selectattr('tags.VPN', 'equalto', '512') | list | first }}"
+    aws_transport_nic: "{{ aws_network_interfaces | selectattr('tags.VPN', 'equalto', '0') | list | first }}"
+
+
+# EIPs
+- name: Associate EIP with network interfaces
+  amazon.aws.ec2_eip:
+    device_id: "{{ interface_item.id }}"
+    region: "{{ aws_region }}"
+    in_vpc: true
+    state: present
+    reuse_existing_ip_allowed: true
+    tags:
+      Name: "eip-for-{{ interface_item.tags.Name }}"
+      Creator: "{{ aws_tag_creator }}"
+      Machine: "{{ hostname }}"
+      VPN: "{{ interface_item.tags.VPN }}"
+  loop: "{{ [aws_mgmt_nic, aws_transport_nic] }}"  # We do loop starting with mgmt nic, so we know results[0] is mgmt ip
+  loop_control:
+    loop_var: interface_item
+    label: "eip-for-{{ interface_item.tags.Name }}"
+  register: eip_vmanage
+  retries: 3
+  delay: 3
+  until: eip_vmanage is succeeded
+
+
+# cloud-init
+- name: Set path for bootstrap configuration
+  ansible.builtin.set_fact:
+    generated_userdata_vmanage: "{{ userdata_vmanage_path }}-{{ hostname }}"
+  changed_when: true
+
+- name: Template userdata file for vManage
+  ansible.builtin.template:
+    src: ./userdata_vmanage.j2
+    dest: "{{ generated_userdata_vmanage }}"
+    mode: "0644"
+
+
+# vManage
+- name: Launch vManage
+  amazon.aws.ec2_instance:
+    count: 1
+    instance_type: "{{ aws_vmanage_instance_type }}"
+    image:
+      id: "{{ aws_vmanage_ami_id }}"
+    state: present
+    vpc_subnet_id: "{{ aws_mgmt_subnet.id }}"
+    region: "{{ aws_region }}"
+    key_name: "{{ aws_key_name | default('') | bool | ternary(aws_key_name, omit) }}"
+    network:
+      assign_public_ip: false
+      interfaces:
+        - id: "{{ aws_mgmt_nic.id }}"
+          device_index: 0
+          description: "{{ aws_mgmt_nic.tags.Name }}"
+        - id: "{{ aws_transport_nic.id }}"
+          device_index: 1
+          description: "{{ aws_transport_nic.tags.Name }}"
+    name: "{{ hostname }}"
+    tags:
+      Name: "{{ hostname }}"
+      Creator: "{{ aws_tag_creator }}"
+    user_data: "{{ lookup('file', generated_userdata_vmanage) }}"
+    volumes:
+      - device_name: /dev/xvda
+        ebs:
+          volume_size: 60
+          delete_on_termination: true
+      - device_name: /dev/sdb
+        ebs:
+          volume_size: 60
+          delete_on_termination: true
+  register: ec2_vmanage
+
+- name: Store vManage instance details for deployment_results
+  ansible.builtin.set_fact:
+    instance:
+      hostname: "{{ hostname }}"
+      system_ip: "{{ system_ip }}"
+      admin_username: "{{ admin_username }}"
+      admin_password: "{{ admin_password }}"
+      mgmt_public_ip: "{{ eip_vmanage.results[0].public_ip }}"
+      transport_public_ip: "{{ eip_vmanage.results[1].public_ip }}"
+  changed_when: true
+  notify: Show deployment_facts
+  register: _vmanage_facts
+  retries: 3
+  delay: 5
+  until: _vmanage_facts is succeeded
+
+- name: Update deployment facts - vManage - that will be consumed by vManage-client in Ansible
+  ansible.builtin.set_fact:
+    deployment_facts:
+      vmanage_instances: "{{ deployment_facts.vmanage_instances + [instance] }}"
+      vbond_instances: "{{ deployment_facts.vbond_instances }}"
+      vsmart_instances: "{{ deployment_facts.vsmart_instances }}"
+
+- name: Copy ec2 vManage resources information to log file
+  ansible.builtin.blockinfile:
+    create: true
+    state: present
+    mode: "0644"
+    insertafter: EOF
+    dest: "{{ aws_deployed_controllers_data }}"
+    marker: "\n--------------    ec2 vManage   --------------\n"
+    content: "{{ ec2_vmanage | to_nice_yaml }}"
+
+- name: Allow traffic outside VPC for vManage IP addresses
+  amazon.aws.ec2_security_group:
+    name: "{{ aws_security_group_config.group_name }}"
+    description: "Security Group for SD-WAN instances"
+    vpc_id: "{{ aws_vpc_config.id }}"
+    region: "{{ aws_region }}"
+    purge_rules: false
+    purge_tags: false
+    purge_rules_egress: false
+    rules:
+      - proto: all  # proto all means: `ports: all`
+        cidr_ip: "{{ eip_vmanage.results[0].public_ip }}/32"
+        rule_desc: "{{ hostname }} - mgmt (VPN 512)"
+      - proto: all
+        cidr_ip: "{{ eip_vmanage.results[1].public_ip }}/32"
+        rule_desc: "{{ hostname }} - transport (VPN 0)"
+    rules_egress: []
+  register: allow_traffic
+  retries: 3
+  delay: 3
+  until: allow_traffic is succeeded

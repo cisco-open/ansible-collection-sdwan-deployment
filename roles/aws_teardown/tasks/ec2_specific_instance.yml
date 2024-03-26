@@ -1,0 +1,78 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+
+- name: Show teardown_specific_instances
+  ansible.builtin.debug:
+    msg: "{{ teardown_specific_instances }}"
+
+# EC2 Instances
+- name: Gather facts about all instances in VPC
+  amazon.aws.ec2_instance_info:
+    filters:
+      vpc-id: "{{ aws_vpc_id }}"
+      "tag:Creator": "{{ aws_tag_creator }}"
+      "tag:Name": "{{ teardown_specific_instances }}"
+  register: ec2_info
+
+- name: Terminate all filtered instances
+  amazon.aws.ec2_instance:
+    state: terminated
+    instance_ids: "{{ instance_item.instance_id }}"
+  loop: "{{ ec2_info.instances }}"
+  loop_control:
+    loop_var: instance_item
+    label: "Terminate instance: {{ instance_item.tags.Name }}"
+  register: _ec2_instance_results
+  async: 120
+  poll: 0
+
+- name: Wait for 'Terminate all filtered instances' running task to finish
+  ansible.builtin.async_status:
+    jid: "{{ result_item.ansible_job_id }}"
+  register: _jobs_alias_vc_0
+  retries: 120
+  delay: 2
+  until: _jobs_alias_vc_0.finished
+  loop: "{{ _ec2_instance_results.results }}"
+  loop_control:
+    loop_var: result_item
+
+# EIP & NETWORK INTERFACES
+
+- name: Gather information about all network interfaces in the VPC
+  amazon.aws.ec2_eni_info:
+    filters:
+      vpc-id: "{{ aws_vpc_id }}"
+      "tag:Creator": "{{ aws_tag_creator }}"
+      "tag:Machine": "{{ teardown_specific_instances }}"
+    region: "{{ aws_region }}"
+  register: enis
+
+- name: Disassociate EIPs
+  amazon.aws.ec2_eip:
+    state: absent
+    region: "{{ aws_region }}"
+    device_id: "{{ nic_item.network_interface_id }}"
+    in_vpc: true
+    release_on_disassociation: true
+  loop: "{{ enis.network_interfaces | selectattr('association', 'defined') | list }}"
+  loop_control:
+    loop_var: nic_item
+    label: "Disassociate: {{ nic_item.tags.Name }}"
+  when: nic_item.association is defined
+  register: disassociated_eips
+
+- name: Delete all network interfaces in the VPC for specific instances
+  amazon.aws.ec2_eni:
+    eni_id: "{{ nic_item.id }}"
+    region: "{{ aws_region }}"
+    state: absent
+  loop: "{{ enis.network_interfaces }}"
+  loop_control:
+    loop_var: nic_item
+    label: "Delete NIC: {{ nic_item.tags.Name }}"
+  register: _enis_absent
+  retries: 3
+  delay: 5
+  until: _enis_absent is succeeded

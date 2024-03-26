@@ -1,0 +1,5 @@
+---
+
+# File required if you want to teardown only specific instances via playbook
+
+teardown_specific_instances: null

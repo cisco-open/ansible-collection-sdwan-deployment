@@ -1,0 +1,15 @@
+.aws_resources_deploy.json
+cloud-init.log
+.userdata_*
+!roles/aws/templates/*
+venv_ansible_aws
+.venv
+.vscode
+# pyenv
+.python-version
+ansible.log
+poetry.lock
+deployment_results
+playbooks/deployment_results
+playbooks/results
+dev_dir_tmp

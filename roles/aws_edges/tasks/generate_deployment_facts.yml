@@ -1,0 +1,25 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+# Add these:
+    # private_mgmt_ip:
+    # private_transport_ip:
+
+# for deployment results filename .yml extension will be added along with timestamp
+# results_path_edges: "{{ results_dir }}/deployment_facts_edges"
+- name: Set results_path_edges if not defined
+  ansible.builtin.set_fact:
+    results_path_edges: "{{ results_dir }}/deployment_facts_edges_{{ ansible_date_time.date }}.yml"
+  when: results_path_edges is not defined
+
+- name: Generate file {{ results_path_edges }} to store deployment facts
+  ansible.builtin.blockinfile:
+    create: true
+    state: present
+    mode: "0644"
+    insertafter: EOF
+    dest: "{{ results_path_edges }}"
+    marker: "# {mark} ansible generated data"
+    content: "{{ deployment_facts | to_nice_yaml(indent=2) }}"

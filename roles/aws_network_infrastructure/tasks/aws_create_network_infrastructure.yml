@@ -1,0 +1,180 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+# For example scenario we are deploying:
+# 1 aws_vpc
+# 1 aws_internet_gateway
+# 2 aws_subnet (private)
+# 2 aws_route_table_association (for private subnets)
+# 1 aws_security_group
+
+
+# VPC
+# If user wants to provide AZ, we let them, if not, we let AWS decide
+- name: Create VPC - "{{ aws_vpc_name }}"
+  amazon.aws.ec2_vpc_net:
+    name: "{{ aws_vpc_name }}"
+    cidr_block: "{{ aws_vpc_cidr }}"
+    region: "{{ aws_region }}"
+    tags:
+      Name: "{{ aws_vpc_name }}"
+      Creator: "{{ aws_tag_creator }}"
+  register: _created_vpc
+
+- name: Store VPC information to resources file
+  ansible.builtin.blockinfile:
+    create: true
+    state: present
+    mode: "0644"
+    insertafter: EOF
+    dest: "{{ aws_deployed_network_data }}"
+    marker: "\n--------------    aws_vpc - {{ aws_vpc_name }}    --------------\n"
+    content: "{{ _created_vpc.vpc | to_nice_yaml }}"
+  changed_when: false
+
+
+# IGW
+- name: Create Internet Gateway "{{ aws_igw_name }}"
+  amazon.aws.ec2_vpc_igw:
+    vpc_id: "{{ _created_vpc.vpc.id }}"
+    state: present
+    region: "{{ aws_region }}"
+    tags:
+      Name: "{{ aws_igw_name }}"
+      Creator: "{{ aws_tag_creator }}"
+  register: _created_igw
+
+- name: Store IGW information to resources file
+  ansible.builtin.blockinfile:
+    create: true
+    state: present
+    mode: "0644"
+    insertafter: EOF
+    dest: "{{ aws_deployed_network_data }}"
+    marker: "\n--------------    aws_igw  - {{ aws_igw_name }}    --------------\n"
+    content: "{{ _created_igw | to_nice_yaml }}"
+  changed_when: false
+
+# SUBNET
+- name: Create Subnets inside VPC
+  amazon.aws.ec2_vpc_subnet:
+    state: present
+    vpc_id: "{{ _created_vpc.vpc.id }}"
+    cidr: "{{ subnet_config.subnet_cidr }}"
+    map_public: true
+    region: "{{ aws_region }}"
+    az: "{{ aws_availibility_zone }}"
+    tags:
+      Name: "{{ subnet_config.name }}"
+      Creator: "{{ aws_tag_creator }}"
+      VPN: "{{ subnet_config.VPN }}"
+  register: _created_subnets
+  loop: "{{ aws_subnets }}"
+  loop_control:
+    loop_var: subnet_config
+
+- name: Set subnets facts
+  ansible.builtin.set_fact:
+    aws_registered_subnets: "{{ _created_subnets.results }}"
+
+- name: Store aws_registered_subnets resources information to resources file
+  ansible.builtin.blockinfile:
+    create: true
+    state: present
+    mode: "0644"
+    insertafter: EOF
+    dest: "{{ aws_deployed_network_data }}"
+    marker: "\n--------------    aws_registered_subnets    --------------\n"
+    content: "{{ aws_registered_subnets | to_nice_yaml }}"
+  changed_when: false
+
+# ROUTE_TABLE
+- name: Create route tables and associate it with the subnets
+  amazon.aws.ec2_vpc_route_table:
+    vpc_id: "{{ _created_vpc.vpc.id }}"
+    subnets: "{{ subnet_item.subnet.id }}"
+    tags:
+      Name: "{{ aws_route_table_name }}"
+      Creator: "{{ aws_tag_creator }}"
+      SubnetName: "{{ subnet_item.subnet.tags.Name }}"
+      SubnetId: "{{ subnet_item.subnet.id }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ _created_igw.gateway_id }}"
+    region: "{{ aws_region }}"
+  register: _created_route_table
+  loop: "{{ aws_registered_subnets }}"
+  loop_control:
+    loop_var: subnet_item
+    label: "{{ subnet_item.subnet.tags.Name }}"
+
+- name: Set route_tables fact
+  ansible.builtin.set_fact:
+    aws_route_tables:
+      - "{{ _created_route_table.results[0] }}"
+      - "{{ _created_route_table.results[1] }}"
+
+- name: Copy aws_route_tables resources information to resources file
+  ansible.builtin.blockinfile:
+    create: true
+    state: present
+    mode: "0644"
+    insertafter: EOF
+    dest: "{{ aws_deployed_network_data }}"
+    marker: "\n--------------    aws_route_tables    --------------\n"
+    content: "{{ aws_route_tables | to_nice_yaml }}"
+  changed_when: false
+
+# SG
+# TODO - make these rules more flexible and available for users to modify
+- name: Create security group - "{{ aws_security_group_name }}"
+  amazon.aws.ec2_security_group:
+    name: "{{ aws_security_group_name }}"
+    description: Security Group for SD-WAN instances
+    vpc_id: "{{ _created_vpc.vpc.id }}"
+    region: "{{ aws_region }}"
+    rules:
+      - proto: tcp
+        ports:
+          - 22
+          - 443
+          - 830  # NETCONF over SSH
+          - 8443
+        cidr_ip: "{{ aws_allowed_subnets }}"
+      - proto: tcp
+        from_port: 23456
+        to_port: 24156
+        cidr_ip: "{{ aws_allowed_subnets }}"
+      - proto: udp
+        from_port: 12346
+        to_port: 13046
+        cidr_ip: "{{ aws_allowed_subnets }}"
+      - proto: icmp
+        from_port: 8
+        to_port: -1
+        cidr_ip: "{{ aws_allowed_subnets }}"
+    rules_egress:
+      - proto: -1
+        from_port: 0
+        to_port: 0
+        cidr_ip: 0.0.0.0/0
+    purge_rules: false
+    purge_tags: false
+    purge_rules_egress: false
+    tags:
+      Name: "{{ aws_security_group_name }}"
+      Creator: "{{ aws_tag_creator }}"
+  register: _created_security_group
+
+- name: Copy Security Group resources information to log file
+  ansible.builtin.blockinfile:
+    create: true
+    state: present
+    mode: "0644"
+    insertafter: EOF
+    dest: "{{ aws_deployed_network_data }}"
+    marker: "\n--------------    aws_security_group    --------------\n"
+    content: "{{ _created_security_group | to_nice_yaml }}"
+  changed_when: false

@@ -1,0 +1,35 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+
+# EC2 Instances
+- name: Gather facts about all instances in VPC
+  amazon.aws.ec2_instance_info:
+    filters:
+      vpc-id: "{{ aws_vpc_id }}"
+      instance-state-name: ["pending", "running", "shutting-down", "stopping", "stopped"]
+  register: ec2_info
+
+- name: Terminate all instances in a specific VPC
+  amazon.aws.ec2_instance:
+    state: terminated
+    instance_ids: "{{ instance_item.instance_id }}"
+  loop: "{{ ec2_info.instances }}"
+  loop_control:
+    loop_var: instance_item
+    label: "Terminate instance: {{ instance_item.tags.Name }}"
+  register: _ec2_instance_results
+  async: 500
+  poll: 0
+
+- name: Wait for 'Terminate all instances in a specific VPC' running task to finish
+  ansible.builtin.async_status:
+    jid: "{{ result_item.ansible_job_id }}"
+  register: _jobs_alias_vc_0
+  retries: 50
+  delay: 10
+  until: _jobs_alias_vc_0.finished
+  loop: "{{ _ec2_instance_results.results }}"
+  loop_control:
+    loop_var: result_item
+    label: "Wait for terminate instance: {{ result_item.instance_item.tags.Name }}"

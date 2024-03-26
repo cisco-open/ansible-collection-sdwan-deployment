@@ -1,0 +1,11 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+
+# IGW
+- name: Remove Internet Gateway
+  amazon.aws.ec2_vpc_igw:
+    vpc_id: "{{ aws_vpc_id }}"
+    state: absent
+    region: "{{ aws_region }}"
+  register: igw
