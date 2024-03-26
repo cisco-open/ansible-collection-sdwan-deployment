@@ -1,0 +1,17 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+- name: Register boto3 version used in caller's environment
+  community.general.python_requirements_info:
+    dependencies:
+      - boto3>=1.29.2
+  register: requirements_result
+
+- name: Assert that required boto3 versions is used
+  ansible.builtin.assert:
+    that: "{{ requirements_result.mismatched | length == 0 }}"
+    fail_msg: |
+      "Your environment is using mismatched dependencies: {{ requirements_result.mismatched }}"
+      "Please verify your environment in order to proceed."

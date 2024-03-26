@@ -1,0 +1,20 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+# Verify if user session is active
+- name: Get AWS caller facts
+  amazon.aws.aws_caller_info:
+  register: aws_facts
+  ignore_errors: true
+
+- name: Check AWS connection
+  ansible.builtin.debug:
+    msg: "AWS connection is active."
+  when: aws_facts is succeeded
+
+- name: Fail if AWS connection is not active
+  ansible.builtin.fail:
+    msg: "AWS connection is not active. Original message: {{ aws_facts.msg }}"
+  when: aws_facts is failed

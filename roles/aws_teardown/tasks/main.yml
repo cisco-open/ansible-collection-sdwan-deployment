@@ -1,0 +1,92 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+- name: Ask user for confirmation to teardown resources
+  ansible.builtin.pause:
+    prompt: Do you want to continue? (yes/no) [yes]
+  register: user_response
+
+- name: Stop teardown if user response is 'no'
+  ansible.builtin.meta: end_play
+  when: user_response.user_input | default('yes') | lower == 'no'
+
+- name: Verify if user session with AWS is active
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: aws_user_session_probe
+
+# VPC info
+- name: Retrieve VPC details
+  amazon.aws.ec2_vpc_net_info:
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Name": "{{ aws_vpc_name }}"
+      "tag:Creator": "{{ aws_tag_creator }}"
+  register: vpc_info
+
+- name: Check if VPC info is not empty
+  ansible.builtin.assert:
+    that:
+      - vpc_info.vpcs | length > 0
+    fail_msg: "No VPC found. Please check your VPC configuration. Might be that you already removed your configuration."
+
+- name: Set fact from register variable
+  ansible.builtin.set_fact:
+    aws_vpc_id: "{{ vpc_info.vpcs[0].id }}"
+
+
+# SUBNET info
+- name: Gather information about all subnets in VPC
+  amazon.aws.ec2_vpc_subnet_info:
+    filters:
+      vpc-id: "{{ aws_vpc_id }}"
+    region: "{{ aws_region }}"
+  register: vpc_subnets
+
+- name: Set fact from register variable
+  ansible.builtin.set_fact:
+    aws_vpc_subnets: "{{ vpc_subnets }}"
+
+
+#######################    Teardown    #######################
+
+- name: Stop and terminate specific ec2 instances and their NICs and EIPs
+  ansible.builtin.include_tasks: ec2_specific_instance.yml
+  when: teardown_specific_instances
+
+# ec2 instance
+- name: Stop and terminate ec2 instance
+  ansible.builtin.include_tasks: ec2_instance.yml
+  when: not teardown_specific_instances
+
+# eip and network interfaces
+- name: Remove all network interfaces associated with VPC
+  ansible.builtin.include_tasks: ec2_eni.yml
+  when: not teardown_specific_instances
+
+# security groups
+- name: Remove all security groups associated with VPC
+  when: not teardown_specific_instances
+  ansible.builtin.include_tasks: ec2_group.yml
+
+# route tables
+- name: Remove all route tables associated with VPC
+  when: not teardown_specific_instances
+  ansible.builtin.include_tasks: ec2_vpc_route_table.yml
+
+# subnets
+- name: Remove all subnets associated with VPC
+  when: not teardown_specific_instances
+  ansible.builtin.include_tasks: ec2_vpc_subnet.yml
+
+# igw
+- name: Remove all internet gateways
+  when: not teardown_specific_instances
+  ansible.builtin.include_tasks: ec2_vpc_igw.yml
+
+# vpc
+- name: Remove VPC
+  when: not teardown_specific_instances
+  ansible.builtin.include_tasks: ec2_vpc_net.yml

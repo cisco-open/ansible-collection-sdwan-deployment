@@ -1,0 +1,29 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+- name: Verify boto3 and botocore dependecies for amazon.aws collection
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: aws_boto3_requirements
+
+- name: Verify if user session with AWS is active
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: aws_user_session_probe
+
+- name: Assert all required variables for AWS network infrastructure deployment
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: aws_required_variables
+    defaults_from: required_vars_network_infrastructure.yml
+
+- name: "Prepare directory for results, path: {{ results_dir }}"
+  ansible.builtin.file:
+    path: "{{ results_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Create network infrastructure on AWS
+  ansible.builtin.include_tasks: aws_create_network_infrastructure.yml

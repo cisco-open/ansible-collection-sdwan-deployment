@@ -1,0 +1,62 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+# These tasks will be useful if we will have flags to control workflow
+# They can help find existing network resources in AWS.
+
+# VPC info
+- name: Retrieve VPC details
+  amazon.aws.ec2_vpc_net_info:
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Name": "{{ aws_vpc_name }}"
+      "tag:Creator": "{{ aws_tag_creator }}"
+  register: aws_vpc_info
+
+- name: Check if VPC info is not empty
+  ansible.builtin.assert:
+    that:
+      - aws_vpc_info.vpcs | length > 0
+    fail_msg: "\nNo VPC found. Please check your VPC configuration. Might be that you already removed your configuration"
+
+- name: Set aws_vpc and aws_vpc_id facts
+  ansible.builtin.set_fact:
+    aws_discovered_vpc: "{{ aws_vpc_info.vpcs[0] }}"
+
+
+- name: Gather information about any VPC subnet within VPC with ID
+  amazon.aws.ec2_vpc_subnet_info:
+    filters:
+      vpc-id: "{{ aws_discovered_vpc.id }}"
+  register: aws_subnet_info
+
+- name: Check if Subnets info is not empty
+  ansible.builtin.assert:
+    that:
+      - aws_subnet_info.subnets | length > 0
+    fail_msg: "\nNo Subnets found. Please check your VPC and Subnets configuration."
+
+- name: Set subnets facts
+  ansible.builtin.set_fact:
+    aws_discovered_subnets: "{{ aws_subnet_info.subnets }}"
+
+
+- name: Gather information about all security groups in a VPC
+  amazon.aws.ec2_security_group_info:
+    filters:
+      vpc-id: "{{ aws_discovered_vpc.id }}"
+      "tag:Name": "{{ aws_security_group_name }}"
+    region: "{{ aws_region }}"
+  register: security_groups_info
+
+- name: Check if Security Groups info is not empty
+  ansible.builtin.assert:
+    that:
+      - security_groups_info.security_groups | length > 0
+    fail_msg: "\nNo Security Groups found. Please check your VPC and Security Groups configuration."
+
+- name: Set security_group fact
+  ansible.builtin.set_fact:
+    aws_discovered_security_group: "{{ security_groups_info.security_groups[0] }}"

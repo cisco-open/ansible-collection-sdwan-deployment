@@ -1,0 +1,51 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+# VPN subnets from which we can connect to AWS EIPs (Security Group config)
+aws_allowed_subnets: null
+
+#####################################
+#     General AWS configuration     #
+#####################################
+
+organization_name: null  # has to be set by user
+
+
+# Common
+aws_region: us-east-1
+aws_resources_prefix: "{{ organization_name }}"
+aws_tag_creator: "{{ organization_name }}"
+aws_availibility_zone: us-east-1a  # we cannot use us-east-1e for c5.9xlarge, therefore we use us-east-1a
+
+# VPC
+aws_vpc_name: "{{ aws_resources_prefix }}-vpc"
+aws_vpc_cidr: 10.0.0.0/16  # default ips from official Cisco guides
+
+# IGW
+aws_igw_name: "{{ aws_resources_prefix }}-igw"
+
+# SUBNETs
+aws_subnets:
+  - name: "{{ aws_resources_prefix }}-mgmt-subnet-512"
+    subnet_cidr: "10.0.1.0/24"  # default ips from official Cisco guides
+    VPN: 512
+  - name: "{{ aws_resources_prefix }}-transport-subnet-0"
+    subnet_cidr: "10.0.2.0/24"  # default ips from official Cisco guides
+    VPN: 0
+  # - name: "{{ aws_resources_prefix }}-cluster-subnet-1"
+  #   subnet_cidr: "10.0.3.0/24"  # default ips from official Cisco guides
+  #   VPN: 1
+
+# ROUTE TABLEs
+aws_route_table_name: "{{ aws_resources_prefix }}-rtab"
+
+# SECURITY GROUPs
+aws_security_group_name: "{{ aws_resources_prefix }}-sg"
+aws_vpn_name: "{{ aws_resources_prefix }}-vpn"
+aws_eip_name: "{{ aws_resources_prefix }}-eip"
+aws_nacl_name: "{{ aws_resources_prefix }}-nacl"
+
+# EC2 INSTANCES
+aws_key_name: null

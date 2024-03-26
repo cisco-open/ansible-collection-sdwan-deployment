@@ -1,0 +1,9 @@
+---
+
+# Sample playbook for deploying resources
+- name: Deploy c8000v devices on AWS
+  hosts: localhost
+  roles:
+    - aws_edges
+  vars_files:
+    ./sdwan_config_20_12.yml

@@ -1,0 +1,24 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+---
+
+# SECURITY GROUPS
+- name: Gather information about all security groups in a VPC
+  amazon.aws.ec2_security_group_info:
+    filters:
+      vpc-id: "{{ aws_vpc_id }}"
+      "tag:Name": "{{ aws_security_group_name }}"
+    region: "{{ aws_region }}"
+  register: security_groups_info
+
+- name: Delete all security groups in the VPC
+  amazon.aws.ec2_security_group:
+    name: "{{ sg_item.group_name }}"
+    vpc_id: "{{ aws_vpc_id }}"
+    group_id: "{{ sg_item.group_id }}"
+    region: "{{ aws_region }}"
+    state: absent
+  loop: "{{ security_groups_info.security_groups }}"
+  loop_control:
+    loop_var: sg_item
+    label: "Delete security group: {{ sg_item.tags.Name }}"

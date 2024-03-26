@@ -1,0 +1,75 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+- name: Verify boto3 and botocore dependecies for amazon.aws collection
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: aws_boto3_requirements
+
+- name: Verify if user session with AWS is active
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: aws_user_session_probe
+
+- name: Discover required information about network infrastructure if user didn't provide configuration already
+  when:
+    - aws_vpc_config is not defined
+    - aws_security_group_config is not defined
+    - aws_sunbnets_config is not defined
+  block:
+    - name: Gather network resources information
+      ansible.builtin.include_role:
+        name: aws_network_infrastructure
+        tasks_from: aws_gather_network_resources.yml
+
+    - name: Set reusable infrastructure facts from discovered variables
+      ansible.builtin.set_fact:
+        aws_vpc_config: "{{ aws_discovered_vpc }}"
+        aws_security_group_config: "{{ aws_discovered_security_group }}"
+        aws_subnets_config: "{{ aws_discovered_subnets }}"
+
+- name: Assert all required variables for AWS controllers deployment
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: aws_required_variables
+    defaults_from: required_vars_controllers.yml
+
+- name: "Prepare directory for results, path: {{ results_dir }}"
+  ansible.builtin.file:
+    path: "{{ results_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Verify if inside specified VPC there are already existing instances that match requested instances
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: aws_existing_instances.yml
+  vars:
+    instances_marked_for_deployment: "{{ edge_instances }}"
+
+- name: Define deployment facts - that will be consumed by vManage-client in Ansible
+  ansible.builtin.set_fact:
+    deployment_facts:
+      deployed_edge_instances: []
+
+- name: Create ec2 instance - cEdge (C8000V)
+  ansible.builtin.include_tasks: aws_cedge_ec2_instance.yml
+  vars:
+    hostname: "{{ instance_item.hostname }}"
+    uuid: "{{ instance_item.uuid }}"
+    otp: "{{ instance_item.otp }}"
+    vbond: "{{ instance_item.vbond }}"
+    system_ip: "{{ instance_item.system_ip }}"
+    site_id: "{{ instance_item.site_id }}"
+  loop: "{{ edge_instances }}"
+  loop_control:
+    loop_var: instance_item
+  when: edge_instances is defined and (instance_item.hostname not in instances_info or not instances_info[instance_item.hostname])
+
+- name: Extract deployment facts
+  ansible.builtin.include_tasks: generate_deployment_facts.yml
+
+- name: Check reachability of Edge instances with SSH probe
+  ansible.builtin.include_tasks: aws_wait_for_instances_readiness.yml

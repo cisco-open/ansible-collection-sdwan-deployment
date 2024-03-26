@@ -1,0 +1,46 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+organization_name: null  # has to be set by user
+
+
+################################################
+#     Networking AWS configuration defaults    #
+################################################
+
+# Required by gather networking resources
+aws_region: us-east-1
+aws_vpc_name: "{{ aws_resources_prefix }}-vpc"
+aws_security_group_name: "{{ aws_resources_prefix }}-sg"
+aws_tag_creator: "{{ organization_name }}"
+
+
+aws_resources_prefix: "{{ organization_name }}"
+
+aws_key_name: null
+
+
+##########################################
+#     SD-WAN Instances configuration     #
+##########################################
+
+# Cloud-init general configurations
+admin_username: admin
+admin_password: Cisco#123@Viptela
+vbond_port: 12346
+default_vbond_ip: 192.168.1.199  # default ips from official Cisco guides
+# vpn0_interface_color: default
+
+
+################################
+#          Edge devices        #
+################################
+
+# cedge C8000K
+aws_cedge_ami_id: null
+aws_cedge_instance_type: "c5.large"
+
+
+edge_instances: []

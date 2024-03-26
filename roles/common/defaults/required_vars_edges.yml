@@ -1,0 +1,14 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+required_variables:
+  organization_name: "{{ organization_name }}"
+  aws_region: "{{ aws_region }}"
+  aws_availibility_zone: "{{ aws_availibility_zone }}"
+  admin_password: "{{ admin_password }}"
+  aws_vpc_config: "{{ aws_vpc_config }}"
+  aws_security_group_config: "{{ aws_security_group_config }}"
+  aws_subnets_config: "{{ aws_subnets_config }}"
+  aws_cedge_ami_id: "{{ aws_cedge_ami_id }}"

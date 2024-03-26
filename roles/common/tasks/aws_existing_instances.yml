@@ -1,0 +1,63 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+# VPC info
+- name: Retrieve VPC details
+  amazon.aws.ec2_vpc_net_info:
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Name": "{{ aws_vpc_config.tags.Name }}"
+      "tag:Creator": "{{ aws_vpc_config.tags.Creator }}"
+  register: ec2_vpc_net_info
+
+- name: Initialize instances_info dictionary
+  ansible.builtin.set_fact:
+    instances_info: {}
+
+- name: Gather facts about all instances in VPC
+  amazon.aws.ec2_instance_info:
+    filters:
+      vpc-id: "{{ ec2_vpc_net_info.vpcs[0].id }}"
+      instance-state-name: ["pending", "running", "shutting-down", "stopping", "stopped"]
+  register: ec2_instance_info
+  when: ec2_vpc_net_info.vpcs | length > 0
+
+
+# We are working inside one VPC, consider changing desing in order to maintain more VPCs.
+- name: Verify if there are instances with requested parameters already present
+  when: ec2_instance_info is defined and ec2_instance_info.instances | length > 0
+  block:
+    - name: Set instance status and state, variable 'instances_info' will hold list of existing instances
+      ansible.builtin.set_fact:
+        instances_info: >-
+          {{
+            instances_info | default({}) | combine({
+              instance_item.hostname: {
+                'state': (ec2_instance_info.instances | selectattr('tags.Name', 'equalto', instance_item.hostname) | map(attribute='state.name') | first)
+              }
+            }) if instance_item.hostname in (ec2_instance_info.instances | map(attribute='tags.Name') | list) else instances_info
+          }}
+      loop: "{{ instances_marked_for_deployment }}"
+      loop_control:
+        loop_var: instance_item
+      when: instance_item | length > 0
+
+    - name: Prompt user information about existing instances
+      ansible.builtin.pause:
+        prompt: |
+
+          Detected instances with the same name as requested via configuration file:
+
+          {{ instances_info | to_nice_yaml }}
+
+
+          Instances defined withing configuration file will not be re-deployed. Please verify your instances.
+
+          Do you want to continue? (yes/no) [yes]
+      when: instances_info | length > 0
+      register: user_response
+
+    - name: Stop deployment if user response is 'no'
+      ansible.builtin.meta: end_play
+      when: instances_info | length > 0 and user_response.user_input | default('yes') | lower == 'no'

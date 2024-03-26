@@ -1,0 +1,23 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+organization_name: null
+
+teardown_resources_data_path: "{{ playbook_dir }}/aws_resources_teardown.json"
+teardown_only_instances: false
+teardown_specific_instances: false
+
+
+#####################################
+#     General AWS configuration     #
+#####################################
+
+# Common
+aws_region: us-east-1
+aws_resources_prefix: "{{ organization_name }}"
+aws_tag_creator: "{{ organization_name }}"
+aws_availibility_zone: us-east-1a  # we cannot use us-east-1e for c5.9xlarge, therefore we use us-east-1a
+
+aws_vpc_name: "{{ aws_resources_prefix }}-vpc"
+aws_security_group_name: "{{ aws_resources_prefix }}-sg"

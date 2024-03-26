@@ -1,0 +1,46 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+# # Network Interfaces for vManage
+# - name: Create Network Interface for vManage1
+#   azure.azcollection.azure_rm_networkinterface:
+
+# - name: Create Network Interface for vManage2
+#   azure.azcollection.azure_rm_networkinterface:
+
+# # Network Interfaces for vSmart
+# - name: Create Network Interface for vSmart1
+#   azure.azcollection.azure_rm_networkinterface:
+
+# - name: Create Network Interface for vSmart2
+#   azure.azcollection.azure_rm_networkinterface:
+
+# # Network Interfaces for vBond
+# - name: Create Network Interface for vBond1
+#   azure.azcollection.azure_rm_networkinterface:
+
+# - name: Create Network Interface for vBond2
+#   azure.azcollection.azure_rm_networkinterface:
+
+# # Network Interfaces for vEdge
+# - name: Create Network Interface for vEdge1
+#   azure.azcollection.azure_rm_networkinterface:
+
+# - name: Create Network Interface for vEdge2
+#   azure.azcollection.azure_rm_networkinterface:
+
+# # Virtual Machines for vManage
+# - name: Create virtual machine for vManage
+#   azure.azcollection.azure_rm_virtualmachine:
+
+# # Virtual Machines for vSmart
+# - name: Create virtual machine for vSmart
+#   azure.azcollection.azure_rm_virtualmachine:
+
+# # Virtual Machines for vBond
+# - name: Create virtual machine for vBond
+#   azure.azcollection.azure_rm_virtualmachine:
+
+# # Virtual Machines for vEdge
+# - name: Create virtual machine for vEdge
+#   azure.azcollection.azure_rm_virtualmachine:
