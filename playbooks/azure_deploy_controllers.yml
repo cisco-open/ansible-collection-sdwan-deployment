@@ -1,0 +1,12 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+- name: Deploy Cisco SD-WAN controllers on Azure
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    ./azure_sdwan_config.yml
+  roles:
+    - azure_network_infrastructure
+    - azure_controllers

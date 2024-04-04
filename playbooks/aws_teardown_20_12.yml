@@ -1,0 +1,9 @@
+---
+- name: Teardown Cisco SD-WAN versions 20.12 on AWS
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - aws_teardown
+  vars_files:
+    - ./sdwan_config_20_12.yml
+    # - ./specific_edges_to_teardown.yml

@@ -1,0 +1,16 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+- name: "Wait for device ssh server readiness, timeout in seconds: {{ ssh_readiness_timeout | default(600) }}"
+  ansible.builtin.wait_for:
+    delay: "{{ ssh_readiness_delay | default(60) }}"
+    timeout: "{{ ssh_readiness_timeout | default(600) }}"
+    state: started
+    host: 20.185.83.97
+    port: 22
+    connect_timeout: 15
+  loop: "{{ ssh_readiness_instances }}"
+  loop_control:
+    loop_var: instance_item

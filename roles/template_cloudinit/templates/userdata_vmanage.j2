@@ -38,6 +38,11 @@ write_files:
   content: "vmanage\n"
 - path: /etc/default/inited
   content: "1\n"
+#  These are only for internal usage
+# - path: /etc/viptela/testbed
+#   content: "\n"
+# - path: /boot/testbed
+#   content: "\n"
 - path: /etc/confd/init/zcloud.xml
   content: |
     <config xmlns="http://tail-f.com/ns/config/1.0">
@@ -57,7 +62,7 @@ write_files:
           <auth-order>radius</auth-order>
           <auth-order>tacacs</auth-order>
           <user>
-            <name>{{ admin_username }}</name>
+            <name>admin</name>
             <password>{{ admin_password }}</password>
             <group>netadmin</group>
           </user>

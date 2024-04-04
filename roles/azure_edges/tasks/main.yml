@@ -1,40 +1,27 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 # GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
----
-
-- name: Verify boto3 and botocore dependecies for amazon.aws collection
+- name: Verify if user session with Azure is active
   ansible.builtin.include_role:
     name: common
-    tasks_from: aws_boto3_requirements
+    tasks_from: az_user_session_probe
 
-- name: Verify if user session with AWS is active
+- name: "Check if the value of hostname has length of 32 or less"
+  ansible.builtin.assert:
+    that:
+      - instance_item.hostname | length > 0
+      - instance_item.hostname | length <= 32
+    fail_msg: "Verification for hostname failed, wrong hostname: {{ instance_item.hostname }}"
+  loop: "{{ edge_instances }}"
+  loop_control:
+    loop_var: instance_item
+    label: "{{ instance_item.hostname }}"
+
+- name: Assert all required variables for Azure cEdges deployment
   ansible.builtin.include_role:
     name: common
-    tasks_from: aws_user_session_probe
-
-- name: Discover required information about network infrastructure if user didn't provide configuration already
-  when:
-    - aws_vpc_config is not defined
-    - aws_security_group_config is not defined
-    - aws_sunbnets_config is not defined
-  block:
-    - name: Gather network resources information
-      ansible.builtin.include_role:
-        name: aws_network_infrastructure
-        tasks_from: aws_gather_network_resources.yml
-
-    - name: Set reusable infrastructure facts from discovered variables
-      ansible.builtin.set_fact:
-        aws_vpc_config: "{{ aws_discovered_vpc }}"
-        aws_security_group_config: "{{ aws_discovered_security_group }}"
-        aws_subnets_config: "{{ aws_discovered_subnets }}"
-
-- name: Assert all required variables for AWS edges deployment
-  ansible.builtin.include_role:
-    name: common
-    tasks_from: required_variables
-    defaults_from: aws_required_vars_edges.yml
+    tasks_from: aws_required_variables
+    defaults_from: az_required_vars_edges.yml
 
 - name: "Prepare directory for results, path: {{ results_dir }}"
   ansible.builtin.file:
@@ -42,10 +29,10 @@
     state: directory
     mode: "0755"
 
-- name: Verify if inside specified VPC there are already existing instances that match requested instances
+- name: Verify if inside specified VN there are already existing instances that match requested instances
   ansible.builtin.include_role:
     name: common
-    tasks_from: aws_existing_instances.yml
+    tasks_from: az_existing_instances.yml
   vars:
     instances_marked_for_deployment: "{{ edge_instances }}"
 
@@ -55,7 +42,7 @@
       deployed_edge_instances: []
 
 - name: Create ec2 instance - cEdge (C8000V)
-  ansible.builtin.include_tasks: aws_cedge_ec2_instance.yml
+  ansible.builtin.include_tasks: azure_cedge_vm.yml
   vars:
     hostname: "{{ instance_item.hostname }}"
     uuid: "{{ instance_item.uuid }}"
@@ -80,5 +67,5 @@
     tasks_from: wait_for_ssh_readiness
   vars:
     ssh_readiness_delay: 10
-    ssh_readiness_timeout: 300
+    ssh_readiness_timeout: 600
     ssh_readiness_instances: "{{ deployment_facts.deployed_edge_instances }}"

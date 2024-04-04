@@ -15,27 +15,9 @@ chpasswd:
   list:
   - root:root
   - {{ admin_username }}:{{ admin_password }}
-disk_setup:
-  /dev/nvme1n1:
-    table_type: mbr
-    layout: false
-    overwrite: false
-fs_setup:
-- device: /dev/nvme1n1
-  label: data
-  partition: none
-  filesystem: ext4
-  overwrite: false
-mounts:
-- [ /dev/nvme1n1, /opt/data ]
-
 write_files:
-- path: /opt/web-app/etc/persona
-  owner: vmanage:vmanage-admin
-  permissions: '0644'
-  content: '{"persona":"COMPUTE_AND_DATA"}'
 - path: /etc/default/personality
-  content: "vmanage\n"
+  content: "vedge\n"
 - path: /etc/default/inited
   content: "1\n"
 - path: /etc/confd/init/zcloud.xml
@@ -43,47 +25,54 @@ write_files:
     <config xmlns="http://tail-f.com/ns/config/1.0">
       <system xmlns="http://viptela.com/system">
         <host-name>{{ hostname }}</host-name>
-        <personality>vmanage</personality>
-        <device-model>vmanage</device-model>
+        <personality>vedge</personality>
+        <device-model>vedge-cloud</device-model>
         <system-ip>{{ system_ip }}</system-ip>
         <organization-name>{{ organization_name }}</organization-name>
         <sp-organization-name>{{ organization_name }}</sp-organization-name>
-        <site-id>{{ site_id_vmanage }}</site-id>
+        <site-id>{{ site_id }}</site-id>
         <vbond>
-          <remote>{{ vbond_transport_public_ip | default(default_vbond_ip) }}</remote>
+          <remote>{{ vbond_transport_private_ip }}</remote>
+          <local/>
+          <vbond-only/>
         </vbond>
         <aaa>
-          <auth-order>local</auth-order>
-          <auth-order>radius</auth-order>
-          <auth-order>tacacs</auth-order>
           <user>
             <name>{{ admin_username }}</name>
             <password>{{ admin_password }}</password>
-            <group>netadmin</group>
           </user>
         </aaa>
       </system>
       <vpn xmlns="http://viptela.com/vpn">
         <vpn-instance>
           <vpn-id>0</vpn-id>
-          <interface>
-            <if-name>eth1</if-name>
-            <ip>
-              <dhcp-client>true</dhcp-client>
-            </ip>
-            <tunnel-interface>
-              <allow-service>
-                <dhcp>true</dhcp>
-                <dns>true</dns>
-                <ntp>true</ntp>
-                <icmp>true</icmp>
-                <sshd>true</sshd>
-                <netconf>true</netconf>
-                <https>true</https>
-              </allow-service>
-            </tunnel-interface>
-            <shutdown>false</shutdown>
-          </interface>
+            <interface>
+              <if-name>ge0/0</if-name>
+              <ip>
+                <dhcp-client>true</dhcp-client>
+              </ip>
+              <tunnel-interface>
+                <encapsulation>
+                  <encap>ipsec</encap>
+                </encapsulation>
+                <color>
+                  <value>default</value>
+                </color>
+                <allow-service>
+                  <sshd>true</sshd>
+                  <netconf>true</netconf>
+                </allow-service>
+              </tunnel-interface>
+              <shutdown>false</shutdown>
+            </interface>
+          <ip>
+            <route>
+              <prefix>0.0.0.0/0</prefix>
+              <next-hop>
+                <address>{{ vpn0_default_gateway }}</address>
+              </next-hop>
+            </route>
+          </ip>
         </vpn-instance>
         <vpn-instance>
           <vpn-id>512</vpn-id>

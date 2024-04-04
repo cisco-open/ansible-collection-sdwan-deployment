@@ -1,0 +1,112 @@
+---
+
+#######################################
+#     Required configuration data     #
+#######################################
+
+organization_name: null
+
+
+#######################################
+#     General Azure configuration     #
+#######################################
+
+az_location: null
+az_resources_prefix: "{{ organization_name }}"
+
+
+# example configuration is:
+# aws_allowed_subnets:
+#   - 15.15.0.0/16
+#   - 10.10.0.0/16
+aws_allowed_subnets: null
+
+
+###############################
+#          Controllers        #
+###############################
+
+# vManage
+az_vmanage_image_vhd_source: null
+az_vmanage_vm_size: "Standard_F16s_v2"
+
+site_id_vmanage: 100
+
+vmanage_instances:
+  - hostname: "{{ az_resources_prefix }}-vManage"
+    system_ip: 192.168.1.1
+    site_id: "{{ site_id_vmanage }}"
+
+
+# vBond
+az_vbond_image_vhd_source: null
+site_id_vbond: 200
+
+vbond_instances:
+  - hostname: "{{ az_resources_prefix }}-vBond"
+    system_ip: 192.168.3.1
+    site_id: "{{ site_id_vbond }}"
+
+
+# vSmart
+az_vsmart_image_vhd_source: null
+az_vsmart_vm_size: "Standard_F4s_v2"
+
+site_id_vsmart: 300
+
+vsmart_instances:
+  - hostname: "{{ az_resources_prefix }}-vSmart"
+    system_ip: 192.168.2.1
+    site_id: "{{ site_id_vsmart }}"
+
+
+################################
+#          Edge devices        #
+################################
+
+# cedge C8000K
+az_cedge_vm_size: "Standard_D2_v2"
+
+az_cedge_image_offer: "cisco-c8000v-byol"
+az_cedge_image_publisher: "cisco"
+az_cedge_image_sku: "17_13_01a-byol"
+az_cedge_image_version: "17.13.0120231222"
+
+
+# edge_instances: []
+
+# If no edge instances configured, they will be automatically created
+# based on the PnP Portal information.
+# See `deployment_edges_config` to inspect result
+
+
+edge_instances:
+- hostname: acich-az-cedge-1
+  otp: cc29db740f344f4b9968982d47d35768
+  site_id: '1001'
+  system_ip: 192.168.101.1
+  uuid: C8K-43B1056C-147C-35EF-154F-EACACA81D8DC
+  vbond: 137.135.122.118
+- hostname: acich-az-cedge-2
+  otp: 511946c2f8374ea493a6733e75231be7
+  site_id: '1002'
+  system_ip: 192.168.102.1
+  uuid: C8K-7EFB9954-74EA-8985-80B4-39AA14D12573
+  vbond: 137.135.122.118
+- hostname: acich-az-cedge-3
+  otp: 3540b073b37d40458b90af6b587ca370
+  site_id: '1003'
+  system_ip: 192.168.103.1
+  uuid: C8K-A6139414-8C6C-BB10-BD15-17BBB772E569
+  vbond: 137.135.122.118
+
+##########################################
+#       Reusable deployment facts        #
+##########################################
+
+results_dir: "{{ playbook_dir }}/results"
+results_path_controllers: "{{ results_dir }}/controllers.yml"
+results_path_edges: "{{ results_dir }}/edges.yml"
+
+# Required by role: cisco.catalystwan.sync_pnp_edges
+deployment_edges_config: "{{ results_dir }}/edges_from_pnp_bootstrap.yml"

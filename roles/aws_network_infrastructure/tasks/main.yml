@@ -16,8 +16,8 @@
 - name: Assert all required variables for AWS network infrastructure deployment
   ansible.builtin.include_role:
     name: common
-    tasks_from: aws_required_variables
-    defaults_from: required_vars_network_infrastructure.yml
+    tasks_from: required_variables
+    defaults_from: aws_required_vars_network_infrastructure.yml
 
 - name: "Prepare directory for results, path: {{ results_dir }}"
   ansible.builtin.file:

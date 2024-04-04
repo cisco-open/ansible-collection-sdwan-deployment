@@ -42,6 +42,7 @@ Path of this output file customizable via `results_dir` `results_path_controller
 Current coverage:
 
 - [x] Deployment on AWS
+- [x] Deployment on Azure
 - [x] Deployment of:
   - [x] vManage
   - [x] vBond
@@ -49,16 +50,16 @@ Current coverage:
   - [x] cEdge
 - [x] Local installation via Ansible Galaxy
 - [x] Installation via git repository link
+- [x] Migration to CiscoDevNet/Cisco Open
 
 Future Goals:
 
 - [ ] Provide AWX (web-based user interface)
-- [ ] Migrate to CiscoDevNet/Cisco Open
 - [ ] Share roles via Ansible Galaxy
-- [ ] Deployment on Azure
 - [ ] Deployment on GCP
 - [ ] Support for cluster deployment
 - [ ] Enhance cloud-init configuration (complex bringup)
+- [ ] Separate roles for cloudinit templating
 
 ---
 
@@ -80,18 +81,18 @@ Before you begin, ensure you have met the following requirements:
 In `requirements.yml` inside your project add:
 
 ```yml
-- name: git@github.com:cisco-open/ansible-collection-sdwan-deployment.git
+- name: git@sdwan-git.cisco.com:sdwan-tools/cisco.sdwan_deployment.git
   type: git
   version: main
 ```
 
-Note: If you are not using full ansible installation, you might install also aws.collection by adding:
+Note: If you are not using full ansible installation, you might install also `aws.collection` and `azure.azcollection` by adding:
 
 ```yml
-- name: amazon.aws
-  version: 6.5.0
-- name: azure.azcollection
-  version: 1.19.0
+  - name: amazon.aws
+    version: 6.5.0
+  - name: azure.azcollection
+    version: 1.19.0
 ```
 
 to `requirements.yml` inside your project.
@@ -116,9 +117,9 @@ pip install -r requirements.txt
 
 There are configuration files which has been initially filled with values:
 
-- `.playbooks/sdwan_config_20_12.yml`
+- `.playbooks/aws_sdwan_config_20_12.yml`
 
-- `.playbooks/sdwan_config_20_13.yml`
+- `.playbooks/aws_sdwan_config_20_13.yml`
 
 Both files are supplemented by config from `roles/aws_*/vars/example_main.yml` and defaults from `roles/aws_*/defaults/main.yml`
 
@@ -133,13 +134,13 @@ NOTE: You can call the variables file any name, but remember to choose one optio
     - aws_network_infrastructure
     - aws_controllers
   vars_files:
-    - ./playbooks/sdwan_config_20_12.yml
+    - ./playbooks/aws_sdwan_config_20_12.yml
 ```
 
 - or pass the variables by directly including your configuration file with:
 
 ```bash
-ansible-playbook playbooks/deploy_controllers_20_12.yml -e "@./playbooks/sdwan_config_20_12.yml"
+ansible-playbook playbooks/aws_deploy_controllers_20_12.yml -e "@./playbooks/aws_sdwan_config_20_12.yml"
 ```
 
 (notice @ that suggest we are reffering to the file)
@@ -222,8 +223,9 @@ If vManage is not starting NMS service:
 
 ## Compatibility
 
-We are supporting python3.8 currently.
-Ansible-lint is 6.11
+Note that azure collection python requirements include package `uamqp` which can generate wheel issues.
+For MacOS you need to install cmake: `brew install cmake` and: `pip install cmake`.
+Then install working `uamqp` package (which is below `v1.6.9`) with: `pip install uamqp==1.6.8`.
 
 ---
 

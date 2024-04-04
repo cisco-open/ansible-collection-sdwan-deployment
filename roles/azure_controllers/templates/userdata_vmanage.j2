@@ -16,18 +16,18 @@ chpasswd:
   - root:root
   - {{ admin_username }}:{{ admin_password }}
 disk_setup:
-  /dev/nvme1n1:
+  /dev/disk/azure/scsi1/lun10:
     table_type: mbr
     layout: false
     overwrite: false
 fs_setup:
-- device: /dev/nvme1n1
+- device: /dev/disk/azure/scsi1/lun10
   label: data
   partition: none
   filesystem: ext4
   overwrite: false
 mounts:
-- [ /dev/nvme1n1, /opt/data ]
+- [ /dev/disk/azure/scsi1/lun10, /opt/data ]
 
 write_files:
 - path: /opt/web-app/etc/persona
@@ -66,24 +66,32 @@ write_files:
       <vpn xmlns="http://viptela.com/vpn">
         <vpn-instance>
           <vpn-id>0</vpn-id>
-          <interface>
-            <if-name>eth1</if-name>
-            <ip>
-              <dhcp-client>true</dhcp-client>
-            </ip>
-            <tunnel-interface>
-              <allow-service>
-                <dhcp>true</dhcp>
-                <dns>true</dns>
-                <ntp>true</ntp>
-                <icmp>true</icmp>
-                <sshd>true</sshd>
-                <netconf>true</netconf>
-                <https>true</https>
-              </allow-service>
-            </tunnel-interface>
-            <shutdown>false</shutdown>
-          </interface>
+            <interface>
+              <if-name>eth1</if-name>
+              <ip>
+                <dhcp-client>true</dhcp-client>
+              </ip>
+              <tunnel-interface>
+                <allow-service>
+                  <dhcp>true</dhcp>
+                  <dns>true</dns>
+                  <ntp>true</ntp>
+                  <icmp>true</icmp>
+                  <sshd>true</sshd>
+                  <netconf>true</netconf>
+                  <https>true</https>
+                </allow-service>
+              </tunnel-interface>
+              <shutdown>false</shutdown>
+            </interface>
+          <ip>
+            <route>
+              <prefix>0.0.0.0/0</prefix>
+              <next-hop>
+                <address>{{ vpn0_default_gateway }}</address>
+              </next-hop>
+            </route>
+          </ip>
         </vpn-instance>
         <vpn-instance>
           <vpn-id>512</vpn-id>

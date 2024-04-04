@@ -1,0 +1,93 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- name: Verify if user session with Azure is active
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: az_user_session_probe
+
+- name: Assert all required variables for Azure controllers deployment
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: required_variables
+    defaults_from: az_required_vars_controllers.yml
+
+- name: "Check if the value of hostname has length of 32 or less"
+  ansible.builtin.assert:
+    that:
+      - instance_item.hostname | length > 0
+      - instance_item.hostname | length <= 32
+    fail_msg: "Verification for hostname failed, wrong hostname: {{ instance_item.hostname }}"
+  loop: "{{ vmanage_instances + vbond_instances + vsmart_instances }}"
+  loop_control:
+    loop_var: instance_item
+    label: "{{ instance_item.hostname }}"
+
+- name: "Prepare directory for results, path: {{ results_dir }}"
+  ansible.builtin.file:
+    path: "{{ results_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Verify if inside specified VN there are already existing instances that match requested instances
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: az_existing_instances.yml
+  vars:
+    instances_marked_for_deployment: "{{ vmanage_instances + vbond_instances + vsmart_instances }}"
+
+- name: Define deployment facts - that will be consumed by vManage-client in Ansible
+  ansible.builtin.set_fact:
+    deployment_facts:
+      vbond_instances: []
+      vmanage_instances: []
+      vsmart_instances: []
+
+- name: Deploy vBond - Create Virtual Machines
+  ansible.builtin.include_tasks: azure_vbond_vm.yml
+  vars:
+    hostname: "{{ instance_item.hostname }}"
+    system_ip: "{{ instance_item.system_ip }}"
+    site_id: "{{ instance_item.site_id }}"
+  loop: "{{ vbond_instances }}"
+  loop_control:
+    loop_var: instance_item
+  when: vbond_instances is defined and (instance_item.hostname not in instances_info or not instances_info[instance_item.hostname])
+
+- name: Deploy vSmart - Create Virtual Machines
+  ansible.builtin.include_tasks: azure_vsmart_vm.yml
+  vars:
+    hostname: "{{ instance_item.hostname }}"
+    system_ip: "{{ instance_item.system_ip }}"
+    site_id: "{{ instance_item.site_id }}"
+  loop: "{{ vsmart_instances }}"
+  loop_control:
+    loop_var: instance_item
+  when: vsmart_instances is defined and (instance_item.hostname not in instances_info or not instances_info[instance_item.hostname])
+
+- name: Deploy vManage - Create Virtual Machines
+  ansible.builtin.include_tasks: azure_vmanage_vm.yml
+  vars:
+    hostname: "{{ instance_item.hostname }}"
+    system_ip: "{{ instance_item.system_ip }}"
+    site_id: "{{ instance_item.site_id }}"
+  loop: "{{ vmanage_instances }}"
+  loop_control:
+    loop_var: instance_item
+  when: vmanage_instances is defined and (instance_item.hostname not in instances_info or not instances_info[instance_item.hostname])
+
+- name: Extract deployment facts
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: generate_deployment_facts_controllers.yml
+  when: deployment_facts.vbond_instances | length > 0 or deployment_facts.vmanage_instances | length > 0 or deployment_facts.vsmart_instances | length > 0
+
+- name: Check reachability of vManage instance with SSH probe
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: wait_for_ssh_readiness
+  vars:
+    ssh_readiness_delay: 60
+    ssh_readiness_timeout: 900
+    ssh_readiness_instances: "{{ deployment_facts.vmanage_instances }}"
+  when: vmanage_instances is defined and deployment_facts.vmanage_instances | length > 0

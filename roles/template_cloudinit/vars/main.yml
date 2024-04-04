@@ -1,0 +1,18 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+# vars/ are used by the role and not likely to be changed
+
+
+# Deployment results path
+results_dir: "{{ playbook_dir }}/results"
+
+aws_deployed_controllers_data: "{{ results_dir }}/.aws_deployed_controllers_data.yml"
+
+
+# Path to templated userdata config
+userdata_vmanage_path: "{{ results_dir }}/.userdata_vmanage"
+userdata_vbond_path: "{{ results_dir }}/.userdata_vbond"
+userdata_vsmart_path: "{{ results_dir }}/.userdata_vsmart"

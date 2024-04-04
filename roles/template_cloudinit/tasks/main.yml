@@ -1,0 +1,61 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+# Example topology deployed according to:
+#
+# https://www.cisco.com/c/en/us/td/docs/routers/sdwan/configuration/sdwan-xe-gs-book/controller-aws.html
+#
+# More extensive topologies and cluster support TODO
+
+
+- name: Assert all required variables for AWS cloudinit generation
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: aws_required_variables
+    defaults_from: required_vars_controllers.yml
+
+- name: "Prepare directory for results, path: {{ results_dir }}"
+  ansible.builtin.file:
+    path: "{{ results_dir }}"
+    state: directory
+    mode: "0755"
+
+# cloud-init vBond data requires information about private IP assigned to mgmt interface
+# cloud-init templates require information about vBond IP
+# vbond_mgmt_private_ip & ec2_vbond_mgmt_public_ip
+# That are the reasons why vBond has to go up first (if we will use static IPs it can be changed)
+
+- name: Generate cloudinit template for vBond
+  ansible.builtin.include_tasks: aws_vbond_cloudinit.yml
+  vars:
+    hostname: "{{ instance_item.hostname }}"
+    system_ip: "{{ instance_item.system_ip }}"
+    site_id: "{{ instance_item.site_id }}"
+  loop: "{{ vbond_instances }}"
+  loop_control:
+    loop_var: instance_item
+  when: vbond_instances is defined
+
+- name: Generate cloudinit template for vManage
+  ansible.builtin.include_tasks: aws_vmanage_cloudinit.yml
+  vars:
+    hostname: "{{ instance_item.hostname }}"
+    system_ip: "{{ instance_item.system_ip }}"
+    site_id: "{{ instance_item.site_id }}"
+  loop: "{{ vmanage_instances }}"
+  loop_control:
+    loop_var: instance_item
+  when: vmanage_instances is defined
+
+- name: Generate cloudinit template for vSmart
+  ansible.builtin.include_tasks: aws_vsmart_cloudinit.yml
+  vars:
+    hostname: "{{ instance_item.hostname }}"
+    system_ip: "{{ instance_item.system_ip }}"
+    site_id: "{{ instance_item.site_id }}"
+  loop: "{{ vsmart_instances }}"
+  loop_control:
+    loop_var: instance_item
+  when: vsmart_instances is defined

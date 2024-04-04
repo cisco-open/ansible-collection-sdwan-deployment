@@ -40,8 +40,8 @@
 - name: Assert all required variables for AWS controllers deployment
   ansible.builtin.include_role:
     name: common
-    tasks_from: aws_required_variables
-    defaults_from: required_vars_controllers.yml
+    tasks_from: required_variables
+    defaults_from: aws_required_vars_controllers.yml
 
 - name: "Prepare directory for results, path: {{ results_dir }}"
   ansible.builtin.file:
@@ -102,9 +102,17 @@
   when: vsmart_instances is defined and (instance_item.hostname not in instances_info or not instances_info[instance_item.hostname])
 
 - name: Extract deployment facts
-  ansible.builtin.include_tasks: generate_deployment_facts.yml
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: generate_deployment_facts_controllers.yml
   when: deployment_facts.vbond_instances | length > 0 or deployment_facts.vmanage_instances | length > 0 or deployment_facts.vsmart_instances | length > 0
 
 - name: Check reachability of vManage instance with SSH probe
-  ansible.builtin.include_tasks: aws_wait_for_instances_readiness.yml
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: wait_for_ssh_readiness
+  vars:
+    ssh_readiness_delay: 60
+    ssh_readiness_timeout: 600
+    ssh_readiness_instances: "{{ deployment_facts.vmanage_instances }}"
   when: vmanage_instances is defined and deployment_facts.vmanage_instances | length > 0

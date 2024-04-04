@@ -1,0 +1,10 @@
+---
+
+- name: Teardown only edge devices from AWS
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - aws_teardown
+  vars_files:
+    - ./aws_sdwan_config_20_12.yml
+    - ./specific_edges_to_teardown.yml
