@@ -20,7 +20,7 @@
   register: public_ip_addresses
 
 - name: "Get number of existing rules for NSG: {{ az_network_security_group }}"
-  azure_rm_securitygroup_info:
+  azure.azcollection.azure_rm_securitygroup_info:
     resource_group: "{{ az_resource_group }}"
     name: "{{ az_network_security_group }}"
   register: az_res_gr
@@ -92,10 +92,12 @@
     cedge_transport_public_ip: "{{ az_transport_public_ip.ip_address }}"
 
 - name: "Set vpn0_default_gateway fact from VPN 0 subnet value"
-  set_fact:
-    vpn0_default_gateway: "{{ item.cidr | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') }}"
+  sansible.builtin.et_fact:
+    vpn0_default_gateway: "{{ subnet.cidr | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') }}"
   loop: "{{ az_subnets }}"
-  when: item.VPN == 0
+  loop_control:
+    loop_var: subnet
+  when: subnet.VPN == 0
 
 - name: "Set path for bootstrap configuration: {{ userdata_cedge_path }}-{{ hostname }}"
   ansible.builtin.set_fact:

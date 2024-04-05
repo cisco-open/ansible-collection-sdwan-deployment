@@ -59,7 +59,7 @@ default_vbond_ip: 192.168.1.199
 ###############################
 
 # vManage
-az_vmanage_vm_size: "Standard_F16s_v2" 
+az_vmanage_vm_size: "Standard_F16s_v2"
 site_id_vmanage: 100
 
 vmanage_instances: []

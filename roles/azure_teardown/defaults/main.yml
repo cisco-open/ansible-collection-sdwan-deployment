@@ -17,4 +17,3 @@ az_resources_prefix: "{{ organization_name }}"  # default to organization_name, 
 
 # Resource group
 az_resource_group: "{{ az_resources_prefix }}-rg"
-

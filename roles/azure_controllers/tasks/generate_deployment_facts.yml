@@ -21,15 +21,15 @@
 # for deployment results filename .yml extension will be added along with timestamp
 # results_path_controllers: "{{ results_dir }}/deployment_facts_edges"
 - name: Set results_path_controllers if not defined
-  block:
-  - name: Get info about time
-    ansible.builtin.setup:
-      gather_subset:
-        - min
-  - name: Create path
-    ansible.builtin.set_fact:
-      results_path_controllers: "{{ results_dir }}/deployment_facts_controllers_{{ ansible_date_time.date }}.yml"
   when: results_path_controllers is not defined
+  block:
+    - name: Get info about time
+      ansible.builtin.setup:
+        gather_subset:
+          - min
+    - name: Create path
+      ansible.builtin.set_fact:
+        results_path_controllers: "{{ results_dir }}/deployment_facts_controllers_{{ ansible_date_time.date }}.yml"
 
 - name: Generate file to store deployment facts - {{ results_path_controllers }}
   ansible.builtin.blockinfile:
