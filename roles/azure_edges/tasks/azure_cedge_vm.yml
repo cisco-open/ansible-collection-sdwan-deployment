@@ -92,7 +92,7 @@
     cedge_transport_public_ip: "{{ az_transport_public_ip.ip_address }}"
 
 - name: "Set vpn0_default_gateway fact from VPN 0 subnet value"
-  sansible.builtin.et_fact:
+  ansible.builtin.set_fact:
     vpn0_default_gateway: "{{ subnet.cidr | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') }}"
   loop: "{{ az_subnets }}"
   loop_control:

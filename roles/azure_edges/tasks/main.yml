@@ -20,7 +20,7 @@
 - name: Assert all required variables for Azure cEdges deployment
   ansible.builtin.include_role:
     name: common
-    tasks_from: aws_required_variables
+    tasks_from: required_variables
     defaults_from: az_required_vars_edges.yml
 
 - name: "Replace underscores with hyphens in the az_resources_prefix string"

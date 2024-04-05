@@ -13,7 +13,7 @@
 - name: Assert all required variables for AWS cloudinit generation
   ansible.builtin.include_role:
     name: common
-    tasks_from: aws_required_variables
+    tasks_from: required_variables
     defaults_from: required_vars_controllers.yml
 
 - name: "Prepare directory for results, path: {{ results_dir }}"
