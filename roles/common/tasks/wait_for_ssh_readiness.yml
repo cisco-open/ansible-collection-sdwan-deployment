@@ -8,7 +8,7 @@
     delay: "{{ ssh_readiness_delay | default(60) }}"
     timeout: "{{ ssh_readiness_timeout | default(600) }}"
     state: started
-    host: 20.185.83.97
+    host: "{{ instance_item.mgmt_public_ip }}"
     port: 22
     connect_timeout: 15
   loop: "{{ ssh_readiness_instances }}"

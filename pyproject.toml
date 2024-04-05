@@ -63,12 +63,11 @@ azure-mgmt-recoveryservices = "^2.5.0"
 azure-mgmt-recoveryservicesbackup = "^9.0.0"
 azure-mgmt-notificationhubs = "^8.0.0"
 azure-mgmt-eventhub = "^11.0.0"
-pre-commit = "^3.7.0"
 netaddr = "^1.2.1"
 
 [tool.poetry.dev-dependencies]
 ansible-lint = { version = "^24.2.1", markers = "platform_system != 'Windows'" }
-
+pre-commit = "^3.7.0"
 
 [build-system]
 requires = ["poetry-core"]
