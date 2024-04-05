@@ -16,10 +16,10 @@ az_resources_prefix: "{{ organization_name }}"
 
 
 # example configuration is:
-# aws_allowed_subnets:
+# az_allowed_subnets:
 #   - 15.15.0.0/16
 #   - 10.10.0.0/16
-aws_allowed_subnets: null
+az_allowed_subnets: null
 
 
 ###############################

@@ -12,6 +12,10 @@
     tasks_from: required_variables
     defaults_from: az_required_vars_network_infrastructure.yml
 
+- name: "Replace underscores with hyphens in the az_resources_prefix string"
+  ansible.builtin.set_fact:
+    az_resources_prefix: "{{ az_resources_prefix | replace('_', '-') }}"
+
 - name: "Prepare directory for results, path: {{ results_dir }}"
   ansible.builtin.file:
     path: "{{ results_dir }}"
