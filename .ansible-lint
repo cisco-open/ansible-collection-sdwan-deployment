@@ -16,6 +16,7 @@ exclude_paths:
   - playbooks/aws_sdwan_config*
   - playbooks/azure_sdwan_config*
   - playbooks/specific_edges_to_teardown.yml
+  - roles/aws_teardown/tasks/main.yml
 # parseable: true
 # quiet: true
 # strict: true
