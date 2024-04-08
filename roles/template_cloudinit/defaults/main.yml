@@ -31,18 +31,15 @@ default_vbond_ip: 192.168.1.199  # default ips from official Cisco guides
 
 # vManage
 site_id_vmanage: 100
-
 vmanage_instances: []
 
 # vBond
 site_id_vbond: 200
-
 vbond_instances: []
 
 
 # vSmart
 site_id_vsmart: 300
-
 vsmart_instances: []
 
 # cedge C8000K

@@ -1,0 +1,14 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+- name: "Set path for bootstrap configuration if not defined"
+  ansible.builtin.set_fact:
+    default_path: "{{ results_dir }}/{{ hostname }}"
+  when: generated_cloudinit_path | length == 0
+
+- name: "Template cloud-init configuration file for: {{ hostname }}"
+  ansible.builtin.template:
+    src: "{{ template_path }}"
+    dest: "{{ generated_cloudinit_path if generated_cloudinit_path != '' else default_path }}"
+    mode: "0644"

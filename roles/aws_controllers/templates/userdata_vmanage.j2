@@ -66,24 +66,24 @@ write_files:
       <vpn xmlns="http://viptela.com/vpn">
         <vpn-instance>
           <vpn-id>0</vpn-id>
-          <interface>
-            <if-name>eth1</if-name>
-            <ip>
-              <dhcp-client>true</dhcp-client>
-            </ip>
-            <tunnel-interface>
-              <allow-service>
-                <dhcp>true</dhcp>
-                <dns>true</dns>
-                <ntp>true</ntp>
-                <icmp>true</icmp>
-                <sshd>true</sshd>
-                <netconf>true</netconf>
-                <https>true</https>
-              </allow-service>
-            </tunnel-interface>
-            <shutdown>false</shutdown>
-          </interface>
+            <interface>
+              <if-name>eth1</if-name>
+              <ip>
+                <dhcp-client>true</dhcp-client>
+              </ip>
+              <tunnel-interface>
+                <allow-service>
+                  <dhcp>true</dhcp>
+                  <dns>true</dns>
+                  <ntp>true</ntp>
+                  <icmp>true</icmp>
+                  <sshd>true</sshd>
+                  <netconf>true</netconf>
+                  <https>true</https>
+                </allow-service>
+              </tunnel-interface>
+              <shutdown>false</shutdown>
+            </interface>
         </vpn-instance>
         <vpn-instance>
           <vpn-id>512</vpn-id>

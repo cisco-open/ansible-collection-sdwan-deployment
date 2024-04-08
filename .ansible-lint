@@ -15,6 +15,8 @@ exclude_paths:
   - playbooks/results/
   - playbooks/aws_sdwan_config*
   - playbooks/azure_sdwan_config*
+  - playbooks/template_cloudinit.yml
+  - playbooks/template_cloudinit_config.yml
   - playbooks/specific_edges_to_teardown.yml
   - roles/aws_teardown/tasks/main.yml
 # parseable: true

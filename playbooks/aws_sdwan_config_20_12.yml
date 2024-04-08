@@ -67,7 +67,8 @@ aws_key_name: null
 admin_username: admin
 admin_password: Cisco#123@Viptela
 vbond_port: 12346
-# vpn0_interface_color: default
+# vbond_transport_private_ip: null   # note that default: 192.168.1.199
+# vbond_transport_public_ip: null    # note that default: 192.168.1.199
 
 
 

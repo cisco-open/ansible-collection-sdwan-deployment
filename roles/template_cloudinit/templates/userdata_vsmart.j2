@@ -44,25 +44,35 @@ write_files:
       <vpn xmlns="http://viptela.com/vpn">
         <vpn-instance>
           <vpn-id>0</vpn-id>
-          <interface>
-            <if-name>eth1</if-name>
-            <ip>
-              <dhcp-client>true</dhcp-client>
-            </ip>
-            <tunnel-interface>
-              <encapsulation>
-                <encap>ipsec</encap>
-              </encapsulation>
-              <color>
-                <value>default</value>
-              </color>
-              <allow-service>
-                <sshd>true</sshd>
-                <netconf>true</netconf>
-              </allow-service>
-            </tunnel-interface>
-            <shutdown>false</shutdown>
-          </interface>
+            <interface>
+              <if-name>eth1</if-name>
+              <ip>
+                <dhcp-client>true</dhcp-client>
+              </ip>
+              <tunnel-interface>
+                <encapsulation>
+                  <encap>ipsec</encap>
+                </encapsulation>
+                <color>
+                  <value>default</value>
+                </color>
+                <allow-service>
+                  <sshd>true</sshd>
+                  <netconf>true</netconf>
+                </allow-service>
+              </tunnel-interface>
+              <shutdown>false</shutdown>
+            </interface>
+{% if cloud_provider == 'azure' %}
+          <ip>
+            <route>
+              <prefix>0.0.0.0/0</prefix>
+              <next-hop>
+                <address>{{ vpn0_default_gateway }}</address>
+              </next-hop>
+            </route>
+          </ip>
+{% endif %}
         </vpn-instance>
         <vpn-instance>
           <vpn-id>512</vpn-id>
