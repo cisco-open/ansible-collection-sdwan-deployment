@@ -16,18 +16,33 @@ chpasswd:
   - root:root
   - {{ admin_username }}:{{ admin_password }}
 disk_setup:
+{% if cloud_provider == 'aws' %}
   /dev/nvme1n1:
+{% endif %}
+{% if cloud_provider == 'azure' %}
+  /dev/disk/azure/scsi1/lun10
+{% endif %}
     table_type: mbr
     layout: false
     overwrite: false
 fs_setup:
+{% if cloud_provider == 'aws' %}
 - device: /dev/nvme1n1
+{% endif %}
+{% if cloud_provider == 'azure' %}
+- device: /dev/disk/azure/scsi1/lun10
+{% endif %}
   label: data
   partition: none
   filesystem: ext4
   overwrite: false
 mounts:
+{% if cloud_provider == 'aws' %}
 - [ /dev/nvme1n1, /opt/data ]
+{% endif %}
+{% if cloud_provider == 'azure' %}
+- [ /dev/disk/azure/scsi1/lun10, /opt/data ]
+{% endif %}
 
 write_files:
 - path: /opt/web-app/etc/persona
