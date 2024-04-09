@@ -11,7 +11,7 @@ organization_name: null
 #     General Azure configuration     #
 #######################################
 
-az_location: null
+az_location: eastus  # e.g. eastus
 az_resources_prefix: "{{ organization_name }}"
 
 
@@ -69,36 +69,14 @@ az_cedge_vm_size: "Standard_D2_v2"
 
 az_cedge_image_offer: "cisco-c8000v-byol"
 az_cedge_image_publisher: "cisco"
-az_cedge_image_sku: "17_13_01a-byol"
-az_cedge_image_version: "17.13.0120231222"
-
+az_cedge_image_sku: "17_09_05a-byol"
+az_cedge_image_version: "17.09.0520240304"
 
 # edge_instances: []
 
 # If no edge instances configured, they will be automatically created
 # based on the PnP Portal information.
 # See `deployment_edges_config` to inspect result
-
-
-edge_instances:
-- hostname: acich-az-cedge-1
-  otp: cc29db740f344f4b9968982d47d35768
-  site_id: '1001'
-  system_ip: 192.168.101.1
-  uuid: C8K-43B1056C-147C-35EF-154F-EACACA81D8DC
-  vbond: 137.135.122.118
-- hostname: acich-az-cedge-2
-  otp: 511946c2f8374ea493a6733e75231be7
-  site_id: '1002'
-  system_ip: 192.168.102.1
-  uuid: C8K-7EFB9954-74EA-8985-80B4-39AA14D12573
-  vbond: 137.135.122.118
-- hostname: acich-az-cedge-3
-  otp: 3540b073b37d40458b90af6b587ca370
-  site_id: '1003'
-  system_ip: 192.168.103.1
-  uuid: C8K-A6139414-8C6C-BB10-BD15-17BBB772E569
-  vbond: 137.135.122.118
 
 ##########################################
 #       Reusable deployment facts        #

@@ -19,7 +19,7 @@
     loop_var: subnet_item
   register: public_ip_addresses
 
-- name: "Get number of existing rules for NSG: {{ az_network_security_group }}"
+- name: "Get info about NSG: {{ az_network_security_group }}"
   azure.azcollection.azure_rm_securitygroup_info:
     resource_group: "{{ az_resource_group }}"
     name: "{{ az_network_security_group }}"
@@ -47,6 +47,7 @@
     loop_var: public_ip_state
     index_var: my_idx
     label: public_ip_state.state.name
+  when: public_ip_state.state.name not in az_res_gr.securitygroups | map(attribute='rules') | flatten | map(attribute='name') | list
 
 - name: "Create virtual network interface cards"
   azure.azcollection.azure_rm_networkinterface:
