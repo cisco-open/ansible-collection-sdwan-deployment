@@ -213,6 +213,12 @@ teardown_specific_instances:
   - "acich-ansible-cedge-222"
 ```
 
+### Generating cloud-init configuration
+
+Role `template_cloudinit` provide tasks that can generate `cloudinit` (also known as `userdata`) configuration, without deployment of any machines.
+Examples usage of `template_cloudinit` role can be taken from `playbooks/template_cloudinit.yml`. Note, that in this example playbook, configuration file
+is used from `playbooks/template_cloudinit.yml`.
+
 ---
 
 ## Troubleshooting
