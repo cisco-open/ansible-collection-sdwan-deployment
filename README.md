@@ -1,6 +1,6 @@
-# Cisco SD-WAN Deployment on AWS using Ansible
+# Cisco SD-WAN Deployment on AWS and Azure using Ansible
 
-Ansible roles and playbooks for deployment and teardown of Cisco SD-WAN on AWS.
+Ansible roles and playbooks for deployment and teardown of Cisco SD-WAN on AWS and Azure.
 
 ## Table of Contents
 
@@ -9,6 +9,7 @@ Ansible roles and playbooks for deployment and teardown of Cisco SD-WAN on AWS.
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Troubleshooting](#troubleshooting)
+- [Useful Links](#useful-links)
 - [Contact Information](#contact-information)
 - [License](#license)
 - [Contributing](#contributing)
@@ -24,14 +25,19 @@ This repository includes:
 - `aws_edges`
 - `aws_teardown`
 - `common`
+- `azure_controllers`
+- `azure_edges`
+- `azure_teardown`
+- `azure_controllers`
+- `template_cloudinit`
 
 Ansible roles, which can be used to automate the deployment (and teardown) of SD-WAN systems on the AWS cloud.
 
-In order to have more convenient way of handling next onboarding processes, the `aws` role is generating files via:
+In order to have more convenient way of handling next onboarding processes, the `aws` and `azure` roles are generating files via:
 
-- `roles/aws_controllers/tasks/generate_deployment_facts.yml` and
+- `roles/common/tasks/generate_deployment_facts_controllers.yml` and
 
-- `roles/aws_edges/tasks/generate_deployment_facts.yml`
+- `roles/common/tasks/generate_deployment_facts_edges.yml`
 
 Path of this output file customizable via `results_dir` `results_path_controllers` and `results_path_edges` variables in input config file.
 
@@ -51,6 +57,7 @@ Current coverage:
 - [x] Local installation via Ansible Galaxy
 - [x] Installation via git repository link
 - [x] Migration to CiscoDevNet/Cisco Open
+- [x] Separate role for cloudinit templating
 
 Future Goals:
 
@@ -59,7 +66,6 @@ Future Goals:
 - [ ] Deployment on GCP
 - [ ] Support for cluster deployment
 - [ ] Enhance cloud-init configuration (complex bringup)
-- [ ] Separate roles for cloudinit templating
 
 ---
 
@@ -69,8 +75,8 @@ Before you begin, ensure you have met the following requirements:
 
 - You have installed Ansible
 - You have installed Python
-- You have an AWS account with the necessary permissions.
-- You have access to a Cisco SD-WAN AMIs on AWS.
+- You have an AWS or Azure account with the necessary permissions.
+- You have access to a Cisco SD-WAN AMIs on AWS or images on Azure
 
 ---
 
@@ -118,10 +124,10 @@ pip install -r requirements.txt
 There are configuration files which has been initially filled with values:
 
 - `.playbooks/aws_sdwan_config_20_12.yml`
-
 - `.playbooks/aws_sdwan_config_20_13.yml`
+- `.playbooks/azure_sdwan_config.yml`
 
-Both files are supplemented by config from `roles/aws_*/vars/example_main.yml` and defaults from `roles/aws_*/defaults/main.yml`
+Both files are supplemented by config defaults from all roles.
 
 NOTE: You can call the variables file any name, but remember to choose one option:
 
@@ -145,48 +151,52 @@ ansible-playbook playbooks/aws_deploy_controllers_20_12.yml -e "@./playbooks/aws
 
 (notice @ that suggest we are reffering to the file)
 
-### Deploying Cisco SD-WAN on AWS
+### Deploying Cisco SD-WAN
 
-To deploy Cisco SD-WAN on AWS, run the example playbook using roles:
+To deploy Cisco SD-WAN on AWS or Azure, run the example playbook using roles:
+
+For AWS:
 
 - `aws_network_infrastructure`
 - `aws_controllers`
 - `aws_edges`
 
+For Azure:
+
+- `azure_network_infrastructure`
+- `azure_controllers`
+- `azure_edges`
+
 </br>
 
-Current version of this solution assumes that you have used `aws configure` command (AWS CLI) to set your credentials. #TODO other auth methods
+Current version of this solution assumes that users will authenticate with their cloud providers in order to run ansible playbooks. See [Useful Links](#useful-links).
 
 We provided example playbooks that you can execute with:
 
 ```bash
-ansible-playbook playbooks/deploy_controllers_20_12.yml
+ansible-playbook playbooks/aws_deploy_controllers.yml
+ansible-playbook playbooks/aws_deploy_edges.yml
 ```
 
 or
 
 ```bash
-ansible-playbook playbooks/deploy_controllers_20_13.yml
-```
-
-and:
-
-```bash
-ansible-playbook deploy_edges_20_12.yml
+ansible-playbook playbooks/azure_deploy_controllers.yml
+ansible-playbook playbooks/azure_deploy_edges.yml
 ```
 
 For desired changes, please update configuration files.
 
 ### Tearing down Cisco SD-WAN on AWS
 
-To teardown the deployed system, run the example playbook using the `aws_teardown` role.
+To teardown the deployed system, run the example playbook using the `aws_teardown` role or `azure_teardown`.
 
 ```bash
-ansible-playbook ./playbooks/teardown_20_12.yml
+ansible-playbook ./playbooks/aws_teardown_20_12.yml
 
 or
 
-ansible-playbook ./playbooks/teardown_20_13.yml
+ansible-playbook ./playbooks/azure_teardown.yml
 ```
 
 If you want to teardown only specific ec2 instances (with their EiPs and NICs associated):
@@ -224,8 +234,26 @@ If vManage is not starting NMS service:
 ## Compatibility
 
 Note that azure collection python requirements include package `uamqp` which can generate wheel issues.
-For MacOS you need to install cmake: `brew install cmake` and: `pip install cmake`.
+For MacOS you migth install cmake: `brew install cmake` and: `pip install cmake`.
 Then install working `uamqp` package (which is below `v1.6.9`) with: `pip install uamqp==1.6.8`.
+
+---
+
+## Useful links
+
+### AWS CLI
+
+- [Installing AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
+- [Configuring the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html)
+
+### AWS Authentication
+
+- [Understanding and Getting Your Security Credentials](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html)
+- [Configuring AWS Credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html)
+
+### Azure Authentication
+
+- [Authenticating with Azure](https://docs.ansible.com/ansible/latest/scenario_guides/guide_azure.html#authenticating-with-azure)
 
 ---
 
