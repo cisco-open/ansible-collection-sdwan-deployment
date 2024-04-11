@@ -12,3 +12,7 @@
     src: "{{ template_path }}"
     dest: "{{ generated_cloudinit_path if generated_cloudinit_path != '' else default_path }}"
     mode: "0644"
+
+- name: "Update generated_files list"
+  ansible.builtin.set_fact:
+    generated_files: "{{ generated_files + [generated_cloudinit_path if generated_cloudinit_path != '' else default_path] }}"

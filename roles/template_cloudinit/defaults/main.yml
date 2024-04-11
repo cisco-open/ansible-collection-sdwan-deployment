@@ -4,13 +4,16 @@
 ---
 
 organization_name: null  # has to be set by user
-
-aws_tag_creator: "{{ organization_name }}"
-
-
-aws_resources_prefix: "{{ organization_name }}"
-
 aws_key_name: null
+
+
+# Deployment results path
+results_dir: "{{ playbook_dir }}/results"
+
+# Path to templated userdata config
+userdata_vmanage_path: "{{ results_dir }}/.userdata_vmanage"
+userdata_vbond_path: "{{ results_dir }}/.userdata_vbond"
+userdata_vsmart_path: "{{ results_dir }}/.userdata_vsmart"
 
 
 ##########################################

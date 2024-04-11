@@ -1,5 +1,12 @@
 ---
 
+######################################
+#       Generated files paths        #
+######################################
+
+results_dir: "{{ playbook_dir }}/results"
+
+
 #######################################
 #     Required configuration data     #
 #######################################
@@ -56,10 +63,3 @@ vsmart_instances:
 ################################
 
 cedge_instances: []
-
-
-##########################################
-#       Reusable deployment facts        #
-##########################################
-
-results_dir: "{{ playbook_dir }}/results"

@@ -40,6 +40,10 @@
     state: directory
     mode: "0755"
 
+- name: "Define facts to display for user information about generated files"
+  ansible.builtin.set_fact:
+    generated_files: []
+
 # cloud-init vBond data requires information about private IP assigned to mgmt interface
 # cloud-init templates require information about vBond IP
 # vbond_mgmt_private_ip & ec2_vbond_mgmt_public_ip
@@ -100,3 +104,12 @@
   loop_control:
     loop_var: instance_item
   when: cedge_instances is defined
+
+- name: "Display location of generated files"
+  ansible.builtin.debug:
+    msg: |
+      Generated files directory path:
+        {{ results_dir }}
+
+      List of generated files:
+      {{ generated_files | to_nice_yaml }}

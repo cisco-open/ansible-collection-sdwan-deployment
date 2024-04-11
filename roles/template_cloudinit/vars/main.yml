@@ -4,15 +4,3 @@
 ---
 
 # vars/ are used by the role and not likely to be changed
-
-
-# Deployment results path
-results_dir: "{{ playbook_dir }}/results"
-
-aws_deployed_controllers_data: "{{ results_dir }}/.aws_deployed_controllers_data.yml"
-
-
-# Path to templated userdata config
-userdata_vmanage_path: "{{ results_dir }}/.userdata_vmanage"
-userdata_vbond_path: "{{ results_dir }}/.userdata_vbond"
-userdata_vsmart_path: "{{ results_dir }}/.userdata_vsmart"

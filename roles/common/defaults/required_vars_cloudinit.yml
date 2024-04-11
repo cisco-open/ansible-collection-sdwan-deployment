@@ -7,3 +7,5 @@ required_variables:
   organization_name: "{{ organization_name }}"
   admin_username: "{{ admin_username }}"
   admin_password: "{{ admin_password }}"
+  vbond_transport_private_ip: "{{ vbond_transport_private_ip }}"
+  vbond_transport_public_ip: "{{ vbond_transport_public_ip }}"

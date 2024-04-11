@@ -233,7 +233,7 @@ is "allow-listed". See `aws_allowed_subnets` in `roles/aws_controllers/defaults/
 If vManage is not starting NMS service:
 
 - check if your disk /opt/data is more than 20% free. Otherwise that case shutdown application as well
-- remember to use at least `c5.9xlarge` instance type for vManage in AWS
+- remember to make sure the sdwan manager and other sdwan virtual machines are right sized for your deployment needs - cisco's server recommendations are available here: [server-requirements](https://www.cisco.com/c/en/us/td/docs/routers/sdwan/release/notes/compatibility-and-server-recommendations/server-requirements.html)
 
 ---
 
