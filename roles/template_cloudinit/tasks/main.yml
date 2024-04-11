@@ -28,7 +28,7 @@
   when:
     - cloud_provider not in ['aws', 'azure']
 
-- name: "Assert all required variables for AWS cloudinit generation"
+- name: "Assert all required variables for cloudinit generation"
   ansible.builtin.include_role:
     name: common
     tasks_from: required_variables
@@ -86,7 +86,6 @@
     vpn0_default_gateway: "{{ instance_item.vpn0_default_gateway }}"
     template_path: "./userdata_vsmart.j2"
     generated_cloudinit_path: "{{ cloudinit_path | default('') }}"
-
   loop: "{{ vsmart_instances }}"
   loop_control:
     loop_var: instance_item

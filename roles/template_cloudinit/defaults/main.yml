@@ -25,8 +25,8 @@ admin_username: admin
 admin_password: Cisco#123@Viptela
 vbond_port: 12346
 default_vbond_ip: 192.168.1.199  # default ips from official Cisco guides
-# vpn0_interface_color: default
-
+vbond_transport_private_ip: null
+vbond_transport_public_ip: null
 
 ###############################
 #          Controllers        #
