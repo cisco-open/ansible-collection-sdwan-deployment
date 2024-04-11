@@ -48,7 +48,7 @@
 - name: Create ec2 instance - cEdge (C8000V)
   ansible.builtin.include_tasks: azure_cedge_vm.yml
   vars:
-    hostname: "{{ instance_item.hostname }}"
+    hostname: "{{ instance_item.hostname | replace('_', '-') }}"
     uuid: "{{ instance_item.uuid }}"
     otp: "{{ instance_item.otp }}"
     vbond: "{{ instance_item.vbond }}"
