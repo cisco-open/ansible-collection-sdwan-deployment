@@ -20,7 +20,7 @@ disk_setup:
   /dev/nvme1n1:
 {% endif %}
 {% if cloud_provider == 'azure' %}
-  /dev/disk/azure/scsi1/lun10
+  /dev/disk/azure/scsi1/lun10:
 {% endif %}
     table_type: mbr
     layout: false
@@ -53,11 +53,6 @@ write_files:
   content: "vmanage\n"
 - path: /etc/default/inited
   content: "1\n"
-#  These are only for internal usage
-# - path: /etc/viptela/testbed
-#   content: "\n"
-# - path: /boot/testbed
-#   content: "\n"
 - path: /etc/confd/init/zcloud.xml
   content: |
     <config xmlns="http://tail-f.com/ns/config/1.0">
