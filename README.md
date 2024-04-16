@@ -71,11 +71,12 @@ Future Goals:
 
 ## Prerequisites
 
+This collection is based on `ansible-core==2.16`, see [ansible-core-support-matrix](https://docs.ansible.com/ansible/latest/reference_appendices/release_and_maintenance.html#ansible-core-support-matrix).
+
 Before you begin, ensure you have met the following requirements:
 
-- You have installed Ansible
-- You have installed Python
-- You have an AWS or Azure account with the necessary permissions.
+- You have installed Python 3.10 - 3.12
+- You have an AWS or Azure account with the necessary permissions
 - You have access to a Cisco SD-WAN AMIs on AWS or images on Azure
 
 ---

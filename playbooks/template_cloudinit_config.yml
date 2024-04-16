@@ -32,29 +32,29 @@ vbond_transport_public_ip: null
 site_id_vmanage: 100
 
 vmanage_instances:
-  - hostname: "{{ resources_prefix }}-vManage"
+  - hostname: terraformvmanage1 # "{{ resources_prefix }}-vManage"
     system_ip: 192.168.1.1
     site_id: "{{ site_id_vmanage }}"
-    vpn0_default_gateway: # has to be set if cloud_provider == "azure"
+    vpn0_default_gateway: 10.0.2.1  # has to be set if cloud_provider == "azure"
 
 # vBond
 site_id_vbond: 200
 
 vbond_instances:
-  - hostname: "{{ resources_prefix }}-vBond"
+  - hostname: terraformvbond1 # "{{ resources_prefix }}-vBond"
     system_ip: 192.168.3.1
     site_id: "{{ site_id_vbond }}"
-    vpn0_default_gateway: # has to be set if cloud_provider == "azure"
+    vpn0_default_gateway: 10.0.2.1  # has to be set if cloud_provider == "azure"
 
 
 # vSmart
 site_id_vsmart: 300
 
 vsmart_instances:
-  - hostname: "{{ resources_prefix }}-vSmart"
+  - hostname: terraformvsmart1 # "{{ resources_prefix }}-vSmart"
     system_ip: 192.168.2.1
     site_id: "{{ site_id_vsmart }}"
-    vpn0_default_gateway: # has to be set if cloud_provider == "azure"
+    vpn0_default_gateway: 10.0.2.1  # has to be set if cloud_provider == "azure"
 
 
 
