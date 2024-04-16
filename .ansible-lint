@@ -1,7 +1,7 @@
 ---
 # .ansible-lint
 
-profile: null # min, basic, moderate,safety, shared, production
+profile: production # min, basic, moderate, safety, shared, production
 
 # Allows dumping of results in SARIF format
 # sarif_file: result.sarif
@@ -13,8 +13,12 @@ exclude_paths:
   - .dev_dir/dev_vars.yml
   - .dev_dir/example_dev_vars.yml
   - playbooks/results/
-  - playbooks/sdwan_config*
+  - playbooks/aws_sdwan_config*
+  - playbooks/azure_sdwan_config*
+  - playbooks/template_cloudinit.yml
+  - playbooks/template_cloudinit_config.yml
   - playbooks/specific_edges_to_teardown.yml
+  - roles/aws_teardown/tasks/main.yml
 # parseable: true
 # quiet: true
 # strict: true

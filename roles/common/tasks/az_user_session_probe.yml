@@ -1,0 +1,19 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+
+---
+
+# Verify if user session is active
+- name: Get Azure caller facts
+  azure.azcollection.azure_rm_account_info:
+  register: az_facts
+  ignore_errors: true
+
+- name: Check Azure connection
+  ansible.builtin.debug:
+    msg: "Azure connection is active."
+  when: az_facts is succeeded
+
+- name: Fail if Azure connection is not active
+  ansible.builtin.fail:
+    msg: "Azure connection is not active or not congigured. Original message: {{ az_facts.msg }}"
+  when: az_facts is failed

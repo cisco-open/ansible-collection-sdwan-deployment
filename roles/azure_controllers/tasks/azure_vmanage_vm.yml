@@ -1,0 +1,173 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+- name: "Create public IP addresses for machine: {{ hostname }}"
+  azure.azcollection.azure_rm_publicipaddress:
+    resource_group: "{{ az_resource_group }}"
+    allocation_method: static
+    name: "public-ip-{{ hostname }}-vpn-{{ subnet_item.VPN }}"
+    tags:
+      Name: "public-ip-{{ hostname }}"
+      Creator: "{{ az_tag_creator }}"
+      Machine: "{{ hostname }}"
+      VPN: "{{ subnet_item.VPN }}"
+      Subnet: "{{ subnet_item.name }}"
+  loop: "{{ az_subnets }}"
+  loop_control:
+    loop_var: subnet_item
+  register: public_ip_addresses
+
+- name: "Get info about NSG: {{ az_network_security_group }}"
+  azure.azcollection.azure_rm_securitygroup_info:
+    resource_group: "{{ az_resource_group }}"
+    name: "{{ az_network_security_group }}"
+  register: az_res_gr
+
+- name: "Extend Network Security Group for machine, NSG: {{ az_network_security_group }}"
+  azure.azcollection.azure_rm_securitygroup:
+    resource_group: "{{ az_resource_group }}"
+    name: "{{ az_network_security_group }}"
+    rules:
+      - name: "{{ public_ip_state.state.name }}"
+        protocol: "*"
+        destination_port_range: "*"
+        source_port_range: "*"
+        source_address_prefix: "{{ public_ip_state.state.ip_address }}"
+        access: Allow
+        priority: "{{ 2500 + ((az_res_gr.securitygroups | first).rules | length) + 1 + my_idx }}"
+        direction: Inbound
+    tags:
+      Name: "{{ az_network_security_group }}"
+      Creator: "{{ az_tag_creator }}"
+      Organization: "{{ organization_name }}"
+  loop: "{{ public_ip_addresses.results }}"
+  loop_control:
+    loop_var: public_ip_state
+    index_var: my_idx
+    label: public_ip_state.state.name
+  when: public_ip_state.state.name not in az_res_gr.securitygroups | map(attribute='rules') | flatten | map(attribute='name') | list
+
+- name: "Create virtual network interface cards"
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: "{{ az_resource_group }}"
+    name: "nic-{{ hostname }}-vpn-{{ public_ip_state.state.tags.VPN }}"
+    virtual_network: "{{ az_virtual_network }}"
+    subnet_name: "{{ public_ip_state.state.tags.Subnet }}"
+    security_group: "{{ az_network_security_group }}"
+    ip_configurations:
+      - name: "ipconfig-vpn-{{ public_ip_state.state.tags.VPN }}"
+        public_ip_address_name: "{{ public_ip_state.state.name }}"
+        private_ip_allocation_method: "Dynamic"
+    tags:
+      Name: "nic-{{ hostname }}-vpn-{{ public_ip_state.state.tags.VPN }}"
+      Creator: "{{ az_tag_creator }}"
+      Organization: "{{ organization_name }}"
+      VPN: "{{ public_ip_state.state.tags.VPN }}"
+  loop: "{{ public_ip_addresses.results }}"
+  loop_control:
+    loop_var: public_ip_state
+    index_var: my_idx
+    label: public_ip_state.state.name
+  register: vmanage_nics
+
+- name: Set az_network_interfaces_vmanage fact with a list of interfaces for vmanage
+  ansible.builtin.set_fact:
+    az_network_interfaces_vmanage: "{{ vmanage_nics.results | map(attribute='state') | list }}"
+    az_public_ip_addresses_vmanage: "{{ public_ip_addresses.results | map(attribute='state') | list }}"
+
+- name: Filter az_network_interfaces_vmanage for instance creation. Set az_mgmt_nic and az_transport_nic facts
+  ansible.builtin.set_fact:
+    az_mgmt_nic: "{{ az_network_interfaces_vmanage | selectattr('tags.VPN', 'equalto', '512') | list | first }}"
+    az_transport_nic: "{{ az_network_interfaces_vmanage | selectattr('tags.VPN', 'equalto', '0') | list | first }}"
+    az_mgmt_public_ip: "{{ az_public_ip_addresses_vmanage | selectattr('tags.VPN', 'equalto', '512') | list | first }}"
+    az_transport_public_ip: "{{ az_public_ip_addresses_vmanage | selectattr('tags.VPN', 'equalto', '0') | list | first }}"
+
+# vmanage_mgmt_private_ip
+- name: Set vmanage facts
+  ansible.builtin.set_fact:
+    vmanage_mgmt_private_ip: "{{ az_mgmt_nic.ip_configuration.private_ip_address }}"
+    vmanage_transport_private_ip: "{{ az_transport_nic.ip_configuration.private_ip_address }}"
+    vmanage_mgmt_public_ip: "{{ az_mgmt_public_ip.ip_address }}"
+    vmanage_transport_public_ip: "{{ az_transport_public_ip.ip_address }}"
+
+- name: "Set vpn0_default_gateway fact from VPN 0 subnet value"
+  ansible.builtin.set_fact:
+    vpn0_default_gateway: "{{ subnet.cidr | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') }}"
+  loop: "{{ az_subnets }}"
+  loop_control:
+    loop_var: subnet
+  when: subnet.VPN == 0
+
+- name: "Set path for bootstrap configuration: {{ userdata_vmanage_path }}-{{ hostname }}"
+  ansible.builtin.set_fact:
+    generated_userdata_vmanage: "{{ userdata_vmanage_path }}-{{ hostname }}"
+  changed_when: true
+
+- name: "Template userdata file for vmanage: {{ hostname }}"
+  ansible.builtin.template:
+    src: ./userdata_vmanage.j2
+    dest: "{{ generated_userdata_vmanage }}"
+    mode: "0644"
+
+- name: "Create an image from a VHD for vManage: {{ hostname }}-image"
+  azure.azcollection.azure_rm_image:
+    resource_group: "{{ az_resource_group }}"
+    name: "{{ hostname }}-image"
+    location: "{{ az_location }}"
+    os_type: "Linux"
+    hyper_v_generation: "V1"
+    source: "{{ az_vmanage_image_vhd_source }}"
+
+- name: "Create VM for vmanage: {{ hostname }}"
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ az_resource_group }}"
+    name: "{{ hostname }}"
+    vm_size: "{{ az_vmanage_vm_size }}"
+    admin_username: "{{ admin_username }}-tmp"  # Not included in cloud init
+    admin_password: "{{ admin_password }}"
+    managed_disk_type: "Premium_LRS"
+    os_disk_size_gb: 30
+    os_disk_name: "{{ hostname }}-os-disk"
+    os_type: "Linux"
+    os_disk_caching: "ReadWrite"
+    ephemeral_os_disk: false
+    network_interfaces:
+      - "{{ az_mgmt_nic.id }}"
+      - "{{ az_transport_nic.id }}"
+    image:
+      name: "{{ hostname }}-image"
+      resource_group: "{{ az_resource_group }}"
+    boot_diagnostics:
+      enabled: true
+      type: "managed"
+    data_disks:
+      - lun: 10
+        disk_size_gb: 100
+        managed_disk_type: Premium_LRS
+        storage_container_name: "{{ hostname }}-datadisk1"
+    tags:
+      Name: "{{ hostname }}"
+      Creator: "{{ az_tag_creator }}"
+      Organization: "{{ organization_name }}"
+    custom_data: "{{ lookup('file', generated_userdata_vmanage) }}"
+
+- name: "Store vManage instance details for deployment_results"
+  ansible.builtin.set_fact:
+    instance:
+      hostname: "{{ hostname }}"
+      system_ip: "{{ system_ip }}"
+      admin_username: "{{ admin_username }}"
+      admin_password: "{{ admin_password }}"
+      mgmt_public_ip: "{{ vmanage_mgmt_public_ip }}"
+      transport_public_ip: "{{ vmanage_transport_public_ip }}"
+  changed_when: true
+  notify: Show deployment_facts
+
+- name: "Update deployment facts - vManage - that will be consumed by vManage-client in Ansible"
+  ansible.builtin.set_fact:
+    deployment_facts:
+      vmanage_instances: "{{ deployment_facts.vmanage_instances + [instance] }}"
+      vbond_instances: "{{ deployment_facts.vbond_instances }}"
+      vsmart_instances: "{{ deployment_facts.vsmart_instances }}"

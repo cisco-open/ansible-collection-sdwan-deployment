@@ -46,6 +46,3 @@ aws_security_group_name: "{{ aws_resources_prefix }}-sg"
 aws_vpn_name: "{{ aws_resources_prefix }}-vpn"
 aws_eip_name: "{{ aws_resources_prefix }}-eip"
 aws_nacl_name: "{{ aws_resources_prefix }}-nacl"
-
-# EC2 INSTANCES
-aws_key_name: null

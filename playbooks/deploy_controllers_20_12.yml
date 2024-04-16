@@ -1,9 +1,0 @@
----
-
-- name: Deploy Cisco SD-WAN versions 20.12 on AWS
-  hosts: localhost
-  roles:
-    - aws_network_infrastructure
-    - aws_controllers
-  vars_files:
-    ./sdwan_config_20_12.yml

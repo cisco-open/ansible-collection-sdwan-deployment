@@ -1,0 +1,65 @@
+---
+
+######################################
+#       Generated files paths        #
+######################################
+
+results_dir: "{{ playbook_dir }}/results"
+
+
+#######################################
+#     Required configuration data     #
+#######################################
+
+organization_name: null
+resources_prefix: "{{ organization_name }}"
+
+cloud_provider: null  # can be either aws or azure
+
+# Cloud-init general configurations
+admin_username: admin
+admin_password: Cisco#123@Viptela
+vbond_port: 12346
+vbond_transport_private_ip: null
+vbond_transport_public_ip: null
+
+
+###############################
+#          Controllers        #
+###############################
+
+# vManage
+site_id_vmanage: 100
+
+vmanage_instances:
+  - hostname: terraformvmanage1 # "{{ resources_prefix }}-vManage"
+    system_ip: 192.168.1.1
+    site_id: "{{ site_id_vmanage }}"
+    vpn0_default_gateway: 10.0.2.1  # has to be set if cloud_provider == "azure"
+
+# vBond
+site_id_vbond: 200
+
+vbond_instances:
+  - hostname: terraformvbond1 # "{{ resources_prefix }}-vBond"
+    system_ip: 192.168.3.1
+    site_id: "{{ site_id_vbond }}"
+    vpn0_default_gateway: 10.0.2.1  # has to be set if cloud_provider == "azure"
+
+
+# vSmart
+site_id_vsmart: 300
+
+vsmart_instances:
+  - hostname: terraformvsmart1 # "{{ resources_prefix }}-vSmart"
+    system_ip: 192.168.2.1
+    site_id: "{{ site_id_vsmart }}"
+    vpn0_default_gateway: 10.0.2.1  # has to be set if cloud_provider == "azure"
+
+
+
+################################
+#          Edge devices        #
+################################
+
+cedge_instances: []

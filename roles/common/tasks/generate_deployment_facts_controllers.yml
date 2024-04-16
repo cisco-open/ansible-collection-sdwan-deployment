@@ -1,0 +1,42 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+# Add these:
+    # private_mgmt_ip:
+    # private_transport_ip:
+
+- name: Set dictionary for additional variables
+  ansible.builtin.set_fact:
+    _additional:
+      organization_name: "{{ organization_name }}"
+      vbond_transport_public_ip: "{{ vbond_transport_public_ip | default('null', true) }}"
+
+- name: Update deployment facts with additional variables
+  ansible.builtin.set_fact:
+    deployment_facts: "{{ deployment_facts | ansible.builtin.combine(_additional) }}"
+
+
+# for deployment results filename .yml extension will be added along with timestamp
+# results_path_controllers: "{{ results_dir }}/deployment_facts_edges"
+- name: Set results_path_controllers if not defined
+  when: results_path_controllers is not defined
+  block:
+    - name: Get info about time
+      ansible.builtin.setup:
+        gather_subset:
+          - min
+    - name: Create path
+      ansible.builtin.set_fact:
+        results_path_controllers: "{{ results_dir }}/deployment_facts_controllers_{{ ansible_date_time.date }}.yml"
+
+- name: Generate file to store deployment facts - {{ results_path_controllers }}
+  ansible.builtin.blockinfile:
+    create: true
+    state: present
+    mode: "0644"
+    insertafter: EOF
+    dest: "{{ results_path_controllers }}"
+    marker: "# {mark} ansible generated data"
+    content: "{{ deployment_facts | to_nice_yaml(indent=2) }}"

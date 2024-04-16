@@ -1,0 +1,11 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+- name: Template cloud-init configuration for Cisco SD-WAN for AWS or Azure
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    ./template_cloudinit_config.yml
+  roles:
+    - template_cloudinit

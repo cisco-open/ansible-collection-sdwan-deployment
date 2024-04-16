@@ -4,7 +4,7 @@
 ---
 # VPC info
 - name: Retrieve VPC details
-  amazon.aws.ec2_vpc_net_info:
+  amazon.aws.ec2_vpc_net_info:  # noqa: syntax-check[unknown-module]
     region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ aws_vpc_config.tags.Name }}"

@@ -1,0 +1,14 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- name: Verify if user session with Azure is active
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: az_user_session_probe
+
+- name: "Replace underscores with hyphens in the az_resources_prefix string"
+  ansible.builtin.set_fact:
+    az_resources_prefix: "{{ az_resources_prefix | replace('_', '-') }}"
+
+- name: Remove Azure Resource Group and wait for teardown completion
+  ansible.builtin.include_tasks: az_teardown_rg.yml

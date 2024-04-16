@@ -1,0 +1,88 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+
+---
+
+organization_name: null  # has to be set by user
+
+##################################################
+#     Networking Azure configuration defaults    #
+##################################################
+
+# Common
+az_location: null
+az_tag_creator: "{{ organization_name }}"
+az_resources_prefix: "{{ organization_name }}"  # default to organization_name, but user should have option to modify
+
+# Resource group
+az_resource_group: "{{ az_resources_prefix }}-rg"
+
+# Virtual Network
+az_virtual_network: "{{ az_resources_prefix }}-vn"
+az_vn_address_prefixes_cidr: 10.0.0.0/16
+
+# Subnets
+az_subnets:
+  - name: "{{ az_resources_prefix }}-mgmt-subnet-512"
+    cidr: "10.0.1.0/24"
+    VPN: 512
+  - name: "{{ az_resources_prefix }}-transport-subnet-0"
+    cidr: "10.0.2.0/24"
+    VPN: 0
+  # - name: "{{ az_resources_prefix }}-cluster-subnet-1"
+  #   subnet_cidr: "10.0.3.0/24"
+  #   VPN: 1
+
+# Security group
+az_network_security_group: "{{ az_resources_prefix }}-nsg"
+
+
+# VPN subnets from which we can connect to Azure EIPs (Network Security Group config)
+az_allowed_subnets: null
+
+
+##########################################
+#     SD-WAN Instances configuration     #
+##########################################
+
+azure_key_name: null
+
+# Cloud-init general configurations
+admin_username: admin
+admin_password: Cisco#123@Viptela
+vbond_port: 12346
+default_vbond_ip: 192.168.1.199
+# vpn0_interface_color: default
+
+
+###############################
+#          Controllers        #
+###############################
+
+# vManage
+az_vmanage_vm_size: "Standard_F16s_v2"
+site_id_vmanage: 100
+
+vmanage_instances: []
+  # - hostname: "{{ az_resources_prefix }}-vManage"
+  #   system_ip: 192.168.1.1
+  #   site_id: "{{ site_id_vmanage }}"
+
+
+# vBond
+az_vbond_vm_size: "Standard_F4s_v2"
+site_id_vbond: 200
+
+vbond_instances: []
+  # - hostname: "{{ az_resources_prefix }}-vBond"
+  #   system_ip: 192.168.3.1
+  #   site_id: "{{ site_id_vbond }}"
+
+
+# vSmart
+az_vsmart_vm_size: "Standard_F4s_v2"
+site_id_vsmart: 300
+
+vsmart_instances: []
+  # - hostname: "{{ az_resources_prefix }}-vSmart"
+  #   system_ip: 192.168.2.1
+  #   site_id: "{{ site_id_vsmart }}"

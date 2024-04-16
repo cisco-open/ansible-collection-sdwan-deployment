@@ -1,0 +1,49 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+organization_name: null  # has to be set by user
+aws_key_name: null
+
+
+# Deployment results path
+results_dir: "{{ playbook_dir }}/results"
+
+# Path to templated userdata config
+userdata_vmanage_path: "{{ results_dir }}/.userdata_vmanage"
+userdata_vbond_path: "{{ results_dir }}/.userdata_vbond"
+userdata_vsmart_path: "{{ results_dir }}/.userdata_vsmart"
+
+
+##########################################
+#     SD-WAN Instances configuration     #
+##########################################
+
+# Cloud-init general configurations
+admin_username: admin
+admin_password: Cisco#123@Viptela
+vbond_port: 12346
+default_vbond_ip: 192.168.1.199  # default ips from official Cisco guides
+vbond_transport_private_ip: null
+vbond_transport_public_ip: null
+
+###############################
+#          Controllers        #
+###############################
+
+# vManage
+site_id_vmanage: 100
+vmanage_instances: []
+
+# vBond
+site_id_vbond: 200
+vbond_instances: []
+
+
+# vSmart
+site_id_vsmart: 300
+vsmart_instances: []
+
+# cedge C8000K
+edge_instances: []

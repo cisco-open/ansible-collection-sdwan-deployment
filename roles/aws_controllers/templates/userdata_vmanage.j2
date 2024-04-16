@@ -14,7 +14,7 @@ chpasswd:
   expire: false
   list:
   - root:root
-  - admin:{{ admin_password }}
+  - {{ admin_username }}:{{ admin_password }}
 disk_setup:
   /dev/nvme1n1:
     table_type: mbr
@@ -38,11 +38,6 @@ write_files:
   content: "vmanage\n"
 - path: /etc/default/inited
   content: "1\n"
-#  These are only for internal usage
-# - path: /etc/viptela/testbed
-#   content: "\n"
-# - path: /boot/testbed
-#   content: "\n"
 - path: /etc/confd/init/zcloud.xml
   content: |
     <config xmlns="http://tail-f.com/ns/config/1.0">
@@ -62,7 +57,7 @@ write_files:
           <auth-order>radius</auth-order>
           <auth-order>tacacs</auth-order>
           <user>
-            <name>admin</name>
+            <name>{{ admin_username }}</name>
             <password>{{ admin_password }}</password>
             <group>netadmin</group>
           </user>
@@ -71,24 +66,24 @@ write_files:
       <vpn xmlns="http://viptela.com/vpn">
         <vpn-instance>
           <vpn-id>0</vpn-id>
-          <interface>
-            <if-name>eth1</if-name>
-            <ip>
-              <dhcp-client>true</dhcp-client>
-            </ip>
-            <tunnel-interface>
-              <allow-service>
-                <dhcp>true</dhcp>
-                <dns>true</dns>
-                <ntp>true</ntp>
-                <icmp>true</icmp>
-                <sshd>true</sshd>
-                <netconf>true</netconf>
-                <https>true</https>
-              </allow-service>
-            </tunnel-interface>
-            <shutdown>false</shutdown>
-          </interface>
+            <interface>
+              <if-name>eth1</if-name>
+              <ip>
+                <dhcp-client>true</dhcp-client>
+              </ip>
+              <tunnel-interface>
+                <allow-service>
+                  <dhcp>true</dhcp>
+                  <dns>true</dns>
+                  <ntp>true</ntp>
+                  <icmp>true</icmp>
+                  <sshd>true</sshd>
+                  <netconf>true</netconf>
+                  <https>true</https>
+                </allow-service>
+              </tunnel-interface>
+              <shutdown>false</shutdown>
+            </interface>
         </vpn-instance>
         <vpn-instance>
           <vpn-id>512</vpn-id>

@@ -1,0 +1,125 @@
+Content-Type: multipart/mixed; boundary="===============8815267485200512281=="
+MIME-Version: 1.0
+
+--===============8815267485200512281==
+Content-Type: text/cloud-config; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="cloud-config"
+
+
+#cloud-config
+
+chpasswd:
+  expire: false
+  list:
+  - root:root
+  - {{ admin_username }}:{{ admin_password }}
+disk_setup:
+{% if cloud_provider == 'aws' %}
+  /dev/nvme1n1:
+{% endif %}
+{% if cloud_provider == 'azure' %}
+  /dev/disk/azure/scsi1/lun10:
+{% endif %}
+    table_type: mbr
+    layout: false
+    overwrite: false
+fs_setup:
+{% if cloud_provider == 'aws' %}
+- device: /dev/nvme1n1
+{% endif %}
+{% if cloud_provider == 'azure' %}
+- device: /dev/disk/azure/scsi1/lun10
+{% endif %}
+  label: data
+  partition: none
+  filesystem: ext4
+  overwrite: false
+mounts:
+{% if cloud_provider == 'aws' %}
+- [ /dev/nvme1n1, /opt/data ]
+{% endif %}
+{% if cloud_provider == 'azure' %}
+- [ /dev/disk/azure/scsi1/lun10, /opt/data ]
+{% endif %}
+
+write_files:
+- path: /opt/web-app/etc/persona
+  owner: vmanage:vmanage-admin
+  permissions: '0644'
+  content: '{"persona":"COMPUTE_AND_DATA"}'
+- path: /etc/default/personality
+  content: "vmanage\n"
+- path: /etc/default/inited
+  content: "1\n"
+- path: /etc/confd/init/zcloud.xml
+  content: |
+    <config xmlns="http://tail-f.com/ns/config/1.0">
+      <system xmlns="http://viptela.com/system">
+        <host-name>{{ hostname }}</host-name>
+        <personality>vmanage</personality>
+        <device-model>vmanage</device-model>
+        <system-ip>{{ system_ip }}</system-ip>
+        <organization-name>{{ organization_name }}</organization-name>
+        <sp-organization-name>{{ organization_name }}</sp-organization-name>
+        <site-id>{{ site_id_vmanage }}</site-id>
+        <vbond>
+          <remote>{{ vbond_transport_public_ip | default(default_vbond_ip) }}</remote>
+        </vbond>
+        <aaa>
+          <auth-order>local</auth-order>
+          <auth-order>radius</auth-order>
+          <auth-order>tacacs</auth-order>
+          <user>
+            <name>admin</name>
+            <password>{{ admin_password }}</password>
+            <group>netadmin</group>
+          </user>
+        </aaa>
+      </system>
+      <vpn xmlns="http://viptela.com/vpn">
+        <vpn-instance>
+          <vpn-id>0</vpn-id>
+            <interface>
+              <if-name>eth1</if-name>
+              <ip>
+                <dhcp-client>true</dhcp-client>
+              </ip>
+              <tunnel-interface>
+                <allow-service>
+                  <dhcp>true</dhcp>
+                  <dns>true</dns>
+                  <ntp>true</ntp>
+                  <icmp>true</icmp>
+                  <sshd>true</sshd>
+                  <netconf>true</netconf>
+                  <https>true</https>
+                </allow-service>
+              </tunnel-interface>
+              <shutdown>false</shutdown>
+            </interface>
+{% if cloud_provider == 'azure' %}
+          <ip>
+            <route>
+              <prefix>0.0.0.0/0</prefix>
+              <next-hop>
+                <address>{{ vpn0_default_gateway }}</address>
+              </next-hop>
+            </route>
+          </ip>
+{% endif %}
+        </vpn-instance>
+        <vpn-instance>
+          <vpn-id>512</vpn-id>
+          <interface>
+            <if-name>eth0</if-name>
+            <ip>
+              <dhcp-client>true</dhcp-client>
+            </ip>
+            <shutdown>false</shutdown>
+          </interface>
+        </vpn-instance>
+      </vpn>
+    </config>
+--===============8815267485200512281==

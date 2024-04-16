@@ -1,0 +1,19 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+
+---
+
+organization_name: null  # has to be set by user
+
+wait_for_teardown: true  # if set to false, teardown playbook will finish witout waiting for result
+
+##################################################
+#     Networking Azure configuration defaults    #
+##################################################
+
+# Common
+az_location: null
+az_tag_creator: "{{ organization_name }}"
+az_resources_prefix: "{{ organization_name }}"  # default to organization_name, but user should have option to modify
+
+# Resource group
+az_resource_group: "{{ az_resources_prefix }}-rg"

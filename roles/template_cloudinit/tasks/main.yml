@@ -1,0 +1,114 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+- name: "Prompt for cloud_provider variable"
+  ansible.builtin.pause:
+    prompt: "Which cloud provider are you using (aws/azure)?"
+  register: provider_input
+  when: cloud_provider is not defined or cloud_provider is none
+  vars:
+    pause_action: "{{ 'pause' if cloud_provider is not defined else 'debug' }}"
+
+- name: "Set cloud_provider variable from user input if not defined in config file"
+  ansible.builtin.set_fact:
+    cloud_provider: "{{ provider_input.user_input }}"
+  when: provider_input.user_input is defined and provider_input.user_input in ['aws', 'azure']
+
+- name: "Validate cloud_provider input"
+  ansible.builtin.fail:
+    msg: "Invalid input '{{ provider_input.user_input }}'. You must enter 'aws' or 'azure'."
+  when:
+    - provider_input.user_input is defined
+    - provider_input.user_input not in ['aws', 'azure']
+
+- name: "Validate cloud_provider variable if set from configuration file"
+  ansible.builtin.fail:
+    msg: "Invalid value '{{ cloud_provider }}'. You must use 'aws' or 'azure'."
+  when:
+    - cloud_provider not in ['aws', 'azure']
+
+- name: "Assert all required variables for cloudinit generation"
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: required_variables
+    defaults_from: required_vars_cloudinit.yml
+
+- name: "Prepare directory for results, path: {{ results_dir }}"
+  ansible.builtin.file:
+    path: "{{ results_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: "Define facts to display for user information about generated files"
+  ansible.builtin.set_fact:
+    generated_files: []
+
+# cloud-init vBond data requires information about private IP assigned to mgmt interface
+# cloud-init templates require information about vBond IP
+# vbond_mgmt_private_ip & ec2_vbond_mgmt_public_ip
+# That are the reasons why vBond has to go up first (if we will use static IPs it can be changed)
+
+- name: "Generate cloudinit template for vBond instances"
+  ansible.builtin.include_tasks: template_cloudinit.yml
+  vars:
+    hostname: "{{ instance_item.hostname }}"
+    system_ip: "{{ instance_item.system_ip }}"
+    site_id: "{{ instance_item.site_id }}"
+    vpn0_default_gateway: "{{ instance_item.vpn0_default_gateway }}"
+    template_path: "./userdata_vbond.j2"
+    generated_cloudinit_path: "{{ cloudinit_path | default('') }}"
+  loop: "{{ vbond_instances }}"
+  loop_control:
+    loop_var: instance_item
+  when: vbond_instances is defined
+
+- name: "Generate cloudinit template for vManage instances"
+  ansible.builtin.include_tasks: template_cloudinit.yml
+  vars:
+    hostname: "{{ instance_item.hostname }}"
+    system_ip: "{{ instance_item.system_ip }}"
+    site_id: "{{ instance_item.site_id }}"
+    vpn0_default_gateway: "{{ instance_item.vpn0_default_gateway }}"
+    template_path: "./userdata_vmanage.j2"
+    generated_cloudinit_path: "{{ cloudinit_path | default('') }}"
+  loop: "{{ vmanage_instances }}"
+  loop_control:
+    loop_var: instance_item
+  when: vmanage_instances is defined
+
+- name: "Generate cloudinit template for vSmart instances"
+  ansible.builtin.include_tasks: template_cloudinit.yml
+  vars:
+    hostname: "{{ instance_item.hostname }}"
+    system_ip: "{{ instance_item.system_ip }}"
+    site_id: "{{ instance_item.site_id }}"
+    vpn0_default_gateway: "{{ instance_item.vpn0_default_gateway }}"
+    template_path: "./userdata_vsmart.j2"
+    generated_cloudinit_path: "{{ cloudinit_path | default('') }}"
+  loop: "{{ vsmart_instances }}"
+  loop_control:
+    loop_var: instance_item
+  when: vsmart_instances is defined
+
+- name: "Generate cloudinit template for cEdge instances"
+  ansible.builtin.include_tasks: template_cloudinit.yml
+  vars:
+    hostname: "{{ instance_item.hostname }}"
+    system_ip: "{{ instance_item.system_ip }}"
+    site_id: "{{ instance_item.site_id }}"
+    template_path: "./userdata_cedge.j2"
+    generated_cloudinit_path: "{{ cloudinit_path | default('') }}"
+  loop: "{{ cedge_instances }}"
+  loop_control:
+    loop_var: instance_item
+  when: cedge_instances is defined
+
+- name: "Display location of generated files"
+  ansible.builtin.debug:
+    msg: |
+      Generated files directory path:
+        {{ results_dir }}
+
+      List of generated files:
+      {{ generated_files | to_nice_yaml }}
