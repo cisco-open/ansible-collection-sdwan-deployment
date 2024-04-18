@@ -10,11 +10,6 @@ Content-Disposition: attachment; filename="cloud-config"
 
 #cloud-config
 
-chpasswd:
-  expire: false
-  list:
-  - root:root
-  - {{ admin_username }}:{{ admin_password }}
 disk_setup:
   /dev/disk/azure/scsi1/lun10:
     table_type: mbr
@@ -84,6 +79,14 @@ write_files:
               </tunnel-interface>
               <shutdown>false</shutdown>
             </interface>
+{% if vmanage_cluster_private_ip is defined %}
+            <interface>
+              <if-name>eth2</if-name>
+              <ip>
+                <address>{{ vmanage_cluster_private_ip }}/{{ vmanage_cluster_prefix }}</address>
+              </ip>
+            </interface>
+{% endif %}
           <ip>
             <route>
               <prefix>0.0.0.0/0</prefix>

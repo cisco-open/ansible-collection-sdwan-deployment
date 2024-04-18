@@ -6,8 +6,6 @@
 # Example topology deployed according to:
 #
 # https://www.cisco.com/c/en/us/td/docs/routers/sdwan/configuration/sdwan-xe-gs-book/controller-aws.html
-#
-# More extensive topologies and cluster support TODO
 
 
 - name: Verify boto3 and botocore dependecies for amazon.aws collection

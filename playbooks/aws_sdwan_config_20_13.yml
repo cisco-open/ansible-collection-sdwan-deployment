@@ -23,7 +23,7 @@ aws_allowed_subnets: null
 aws_region: us-east-1
 aws_resources_prefix: "{{ organization_name }}"
 aws_tag_creator: "{{ organization_name }}"
-aws_availibility_zone: us-east-1a  # we cannot use us-east-1e for c5.9xlarge, therefore we use us-east-1a
+aws_availibility_zone: us-east-1a  # we cannot use us-east-1e for c5.9xlarge
 
 # VPC
 aws_vpc_name: "{{ aws_resources_prefix }}-vpc"
@@ -56,6 +56,10 @@ aws_vpn_name: "{{ aws_resources_prefix }}-vpn"
 aws_eip_name: "{{ aws_resources_prefix }}-eip"
 aws_nacl_name: "{{ aws_resources_prefix }}-nacl"
 
+# EC2 INSTANCES
+aws_key_name: null
+
+
 
 ##########################################
 #     SD-WAN Instances configuration     #
@@ -63,10 +67,9 @@ aws_nacl_name: "{{ aws_resources_prefix }}-nacl"
 
 # Cloud-init general configurations
 admin_username: admin
-admin_password: null  # pragma: allowlist secret
+admin_password: Cisco#123@Viptela
 vbond_port: 12346
-# vbond_transport_private_ip: null   # note that default: 192.168.1.199
-# vbond_transport_public_ip: null    # note that default: 192.168.1.199
+# vpn0_interface_color: default
 
 
 
@@ -84,7 +87,6 @@ vmanage_instances:
   - hostname: "{{ aws_resources_prefix }}-vManage"
     system_ip: 192.168.1.1
     site_id: "{{ site_id_vmanage }}"
-
 
 # vBond
 aws_vbond_ami_id: null
@@ -119,8 +121,9 @@ vsmart_instances:
 
 # cedge C8000K
 aws_cedge_ami_id: null
-# try this one also: ami-09db869a0fe05bd4e
 aws_cedge_instance_type: "c5.large"
+
+edge_instances: []
 
 
 ##########################################

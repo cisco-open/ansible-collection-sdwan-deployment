@@ -3,6 +3,12 @@
 
 ---
 
+- name: "Set facts for subnets used in vManage deployment"
+  ansible.builtin.set_fact:
+    transport_subnet: "{{ az_subnets | selectattr('type', 'equalto', 'transport') | first }}"
+    mgmt_subnet: "{{ az_subnets | selectattr('type', 'equalto', 'mgmt') | first }}"
+    cluster_subnet: "{{ az_subnets | selectattr('type', 'equalto', 'cluster') | first | default(omit) }}"
+
 - name: "Create public IP addresses for machine: {{ hostname }}"
   azure.azcollection.azure_rm_publicipaddress:
     resource_group: "{{ az_resource_group }}"
@@ -14,7 +20,10 @@
       Machine: "{{ hostname }}"
       VPN: "{{ subnet_item.VPN }}"
       Subnet: "{{ subnet_item.name }}"
-  loop: "{{ az_subnets }}"
+      type: "{{ subnet_item.type }}"
+  loop:
+    - "{{ transport_subnet }}"
+    - "{{ mgmt_subnet }}"
   loop_control:
     loop_var: subnet_item
   register: public_ip_addresses
@@ -25,7 +34,7 @@
     name: "{{ az_network_security_group }}"
   register: az_res_gr
 
-- name: "Extend Network Security Group for machine, NSG: {{ az_network_security_group }}"
+- name: "Extend Network Security Group for machine. NSG: {{ az_network_security_group }}"
   azure.azcollection.azure_rm_securitygroup:
     resource_group: "{{ az_resource_group }}"
     name: "{{ az_network_security_group }}"
@@ -47,12 +56,14 @@
     loop_var: public_ip_state
     index_var: my_idx
     label: public_ip_state.state.name
-  when: public_ip_state.state.name not in az_res_gr.securitygroups | map(attribute='rules') | flatten | map(attribute='name') | list
+  when:
+    - public_ip_state.state is defined
+    - public_ip_state.state.name not in az_res_gr.securitygroups | map(attribute='rules') | flatten | map(attribute='name') | list
 
-- name: "Create virtual network interface cards"
+- name: "Create virtual network interface cards for public interfaces"
   azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ az_resource_group }}"
-    name: "nic-{{ hostname }}-vpn-{{ public_ip_state.state.tags.VPN }}"
+    name: "nic-{{ hostname }}-{{ public_ip_state.state.tags.type }}-vpn-{{ public_ip_state.state.tags.VPN }}"
     virtual_network: "{{ az_virtual_network }}"
     subnet_name: "{{ public_ip_state.state.tags.Subnet }}"
     security_group: "{{ az_network_security_group }}"
@@ -61,36 +72,80 @@
         public_ip_address_name: "{{ public_ip_state.state.name }}"
         private_ip_allocation_method: "Dynamic"
     tags:
-      Name: "nic-{{ hostname }}-vpn-{{ public_ip_state.state.tags.VPN }}"
+      Name: "nic-{{ hostname }}-{{ public_ip_state.state.tags.type }}-vpn-{{ public_ip_state.state.tags.VPN }}"
       Creator: "{{ az_tag_creator }}"
       Organization: "{{ organization_name }}"
       VPN: "{{ public_ip_state.state.tags.VPN }}"
+      type: "{{ public_ip_state.state.tags.type }}"
   loop: "{{ public_ip_addresses.results }}"
   loop_control:
     loop_var: public_ip_state
     index_var: my_idx
     label: public_ip_state.state.name
   register: vmanage_nics
+  when:
+    - public_ip_state.state is defined
+
+- name: "Create virtual network interface card if cluster deployment"
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: "{{ az_resource_group }}"
+    name: "nic-{{ hostname }}-{{ cluster_subnet.type }}-vpn-{{ cluster_subnet.VPN }}"
+    virtual_network: "{{ az_virtual_network }}"
+    subnet_name: "{{ cluster_subnet.name }}"
+    security_group: "{{ az_network_security_group }}"
+    ip_configurations:
+      - name: "ipconfig-vpn-{{ cluster_subnet.VPN }}"
+        private_ip_allocation_method: "Dynamic"
+    tags:
+      Name: "nic-{{ hostname }}-{{ cluster_subnet.type }}-vpn-{{ cluster_subnet.VPN }}"
+      Creator: "{{ az_tag_creator }}"
+      Organization: "{{ organization_name }}"
+      VPN: "{{ cluster_subnet.VPN }}"
+      type: "{{ cluster_subnet.type }}"
+  register: cluster_vmanage_nic
+  when:
+    - cluster_subnet is defined
+    - cluster_subnet != ""
 
 - name: Set az_network_interfaces_vmanage fact with a list of interfaces for vmanage
   ansible.builtin.set_fact:
-    az_network_interfaces_vmanage: "{{ vmanage_nics.results | map(attribute='state') | list }}"
-    az_public_ip_addresses_vmanage: "{{ public_ip_addresses.results | map(attribute='state') | list }}"
+    az_network_interfaces_vmanage: "{{ (vmanage_nics.results + [cluster_vmanage_nic]) | selectattr('state', 'defined') | map(attribute='state') | list }}"
+    az_public_ip_addresses_vmanage: "{{ public_ip_addresses.results | selectattr('state', 'defined') | map(attribute='state') | list }}"
 
 - name: Filter az_network_interfaces_vmanage for instance creation. Set az_mgmt_nic and az_transport_nic facts
   ansible.builtin.set_fact:
-    az_mgmt_nic: "{{ az_network_interfaces_vmanage | selectattr('tags.VPN', 'equalto', '512') | list | first }}"
-    az_transport_nic: "{{ az_network_interfaces_vmanage | selectattr('tags.VPN', 'equalto', '0') | list | first }}"
-    az_mgmt_public_ip: "{{ az_public_ip_addresses_vmanage | selectattr('tags.VPN', 'equalto', '512') | list | first }}"
-    az_transport_public_ip: "{{ az_public_ip_addresses_vmanage | selectattr('tags.VPN', 'equalto', '0') | list | first }}"
+    az_mgmt_nic: "{{ az_network_interfaces_vmanage | selectattr('tags.type', 'equalto', 'mgmt') | list | first }}"
+    az_transport_nic: "{{ az_network_interfaces_vmanage | selectattr('tags.type', 'equalto', 'transport') | list | first }}"
+    az_cluster_nic: "{{ az_network_interfaces_vmanage | selectattr('tags.type', 'equalto', 'cluster') | list | first | default(omit) }}"
+    az_mgmt_public_ip: "{{ az_public_ip_addresses_vmanage | selectattr('tags.type', 'equalto', 'mgmt') | list | first }}"
+    az_transport_public_ip: "{{ az_public_ip_addresses_vmanage | selectattr('tags.type', 'equalto', 'transport') | list | first }}"
 
-# vmanage_mgmt_private_ip
-- name: Set vmanage facts
+- name: Prepare nics_ids_list variable for VM creation
+  ansible.builtin.set_fact:
+    nics_ids_list: []
+
+- name: "Set NICs IDs to be consumed by VM creation"
+  ansible.builtin.set_fact:
+    nics_ids_list: "{{ nics_ids_list + [nic_item.id] }}"
+  loop:
+    - "{{ az_mgmt_nic }}"
+    - "{{ az_transport_nic }}"
+    - "{{ az_cluster_nic }}"
+  loop_control:
+    loop_var: nic_item
+    label: "{{ nic_item.id | default(omit) }}"
+  when:
+    - nic_item is defined
+    - nic_item.id is defined
+
+- name: "Set vmanage facts"
   ansible.builtin.set_fact:
     vmanage_mgmt_private_ip: "{{ az_mgmt_nic.ip_configuration.private_ip_address }}"
     vmanage_transport_private_ip: "{{ az_transport_nic.ip_configuration.private_ip_address }}"
     vmanage_mgmt_public_ip: "{{ az_mgmt_public_ip.ip_address }}"
     vmanage_transport_public_ip: "{{ az_transport_public_ip.ip_address }}"
+    vmanage_cluster_private_ip: "{{ az_cluster_nic.ip_configuration.private_ip_address | default(omit) }}"
+    vmanage_cluster_prefix: "{{ cluster_subnet.cidr | ansible.utils.ipaddr('prefix') | default(omit) }}"
 
 - name: "Set vpn0_default_gateway fact from VPN 0 subnet value"
   ansible.builtin.set_fact:
@@ -98,7 +153,9 @@
   loop: "{{ az_subnets }}"
   loop_control:
     loop_var: subnet
-  when: subnet.VPN == 0
+  when:
+    - subnet.VPN == 0
+    - subnet.type == "transport"
 
 - name: "Set path for bootstrap configuration: {{ userdata_vmanage_path }}-{{ hostname }}"
   ansible.builtin.set_fact:
@@ -110,6 +167,7 @@
     src: ./userdata_vmanage.j2
     dest: "{{ generated_userdata_vmanage }}"
     mode: "0644"
+
 
 - name: "Create an image from a VHD for vManage: {{ hostname }}-image"
   azure.azcollection.azure_rm_image:
@@ -133,9 +191,7 @@
     os_type: "Linux"
     os_disk_caching: "ReadWrite"
     ephemeral_os_disk: false
-    network_interfaces:
-      - "{{ az_mgmt_nic.id }}"
-      - "{{ az_transport_nic.id }}"
+    network_interfaces: "{{ nics_ids_list }}"
     image:
       name: "{{ hostname }}-image"
       resource_group: "{{ az_resource_group }}"
