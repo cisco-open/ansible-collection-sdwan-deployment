@@ -124,8 +124,7 @@ pip install -r requirements.txt
 
 There are configuration files which has been initially filled with values:
 
-- `.playbooks/aws_sdwan_config_20_12.yml`
-- `.playbooks/aws_sdwan_config_20_13.yml`
+- `.playbooks/aws_sdwan_config.yml`
 - `.playbooks/azure_sdwan_config.yml`
 
 Both files are supplemented by config defaults from all roles.
@@ -141,13 +140,13 @@ NOTE: You can call the variables file any name, but remember to choose one optio
     - aws_network_infrastructure
     - aws_controllers
   vars_files:
-    - ./playbooks/aws_sdwan_config_20_12.yml
+    - ./playbooks/aws_sdwan_config.yml
 ```
 
 - or pass the variables by directly including your configuration file with:
 
 ```bash
-ansible-playbook playbooks/aws_deploy_controllers_20_12.yml -e "@./playbooks/aws_sdwan_config_20_12.yml"
+ansible-playbook playbooks/aws_deploy_controllers.yml -e "@./playbooks/aws_sdwan_config.yml"
 ```
 
 (notice @ that suggest we are reffering to the file)
@@ -193,7 +192,7 @@ For desired changes, please update configuration files.
 To teardown the deployed system, run the example playbook using the `aws_teardown` role or `azure_teardown`.
 
 ```bash
-ansible-playbook ./playbooks/aws_teardown_20_12.yml
+ansible-playbook ./playbooks/aws_teardown.yml
 
 or
 
@@ -203,7 +202,7 @@ ansible-playbook ./playbooks/azure_teardown.yml
 If you want to teardown only specific ec2 instances (with their EiPs and NICs associated):
 
 ```bash
-ansible-playbook ./playbooks/teardown_20_12.yml -e "@instances_to_teardown.yml"
+ansible-playbook ./playbooks/aws_teardown.yml -e "@instances_to_teardown.yml"
 ```
 
 Where `instances_to_teardown.yml` is path to file with definition:
