@@ -6,5 +6,5 @@
   roles:
     - aws_teardown
   vars_files:
-    - ./aws_sdwan_config_20_12.yml
+    - ./aws_sdwan_config.yml
     - ./specific_edges_to_teardown.yml
