@@ -28,7 +28,7 @@ aws_key_name: null
 
 # Cloud-init general configurations
 admin_username: admin
-admin_password: Cisco#123@Viptela
+admin_password: example_password  # pragma: allowlist secret
 vbond_port: 12346
 default_vbond_ip: 192.168.1.199  # default ips from official Cisco guides
 # vpn0_interface_color: default

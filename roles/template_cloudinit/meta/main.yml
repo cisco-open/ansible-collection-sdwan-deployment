@@ -1,1 +1,17 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+
 ---
+
+galaxy_info:
+  author: Arkadiusz Cichon <acichon@cisco.com>
+  description: Role dedicated to template cloudinit configuration for Cisco SD-WAN devices
+  license: GPL-3.0-or-later
+  min_ansible_version: "2.16.6"
+
+  galaxy_tags:
+    - cisco
+    - sdwan
+    - catalystwan
+    - networking
+
+dependencies: []

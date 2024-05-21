@@ -22,7 +22,7 @@ userdata_vsmart_path: "{{ results_dir }}/.userdata_vsmart"
 
 # Cloud-init general configurations
 admin_username: admin
-admin_password: Cisco#123@Viptela
+admin_password: example_password  # pragma: allowlist secret
 vbond_port: 12346
 default_vbond_ip: 192.168.1.199  # default ips from official Cisco guides
 vbond_transport_private_ip: null

@@ -1,1 +1,17 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+
 ---
+
+galaxy_info:
+  author: Arkadiusz Cichon <acichon@cisco.com>
+  description: Deploy Cisco SD-WAN cEdges (C8000V) on AWS
+  license: GPL-3.0-or-later
+  min_ansible_version: "2.16.6"
+
+  galaxy_tags:
+    - cisco
+    - sdwan
+    - catalystwan
+    - networking
+
+dependencies: []

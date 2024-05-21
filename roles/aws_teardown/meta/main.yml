@@ -4,7 +4,7 @@
 
 galaxy_info:
   author: Arkadiusz Cichon <acichon@cisco.com>
-  description: Deploy Cisco SD-WAN cEdges (C8000V) on Azure
+  description: Teardown Cisco SD-WAN devices and required network resources from AWS
   license: GPL-3.0-or-later
   min_ansible_version: "2.16.6"
 
