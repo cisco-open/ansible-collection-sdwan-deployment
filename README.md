@@ -27,7 +27,7 @@ This repository includes:
 - `aws_controllers`
 - `aws_edges`
 - `aws_teardown`
-- `common`
+- cisco.sdwan_deployment.common`
 - `azure_controllers`
 - `azure_edges`
 - `azure_teardown`

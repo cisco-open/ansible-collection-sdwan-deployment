@@ -22,6 +22,5 @@
     state: directory
     mode: "0755"
 
-# Add task to verify if images name or image id have been provided
 - name: "Network resources for SD-WAN machines"
   ansible.builtin.include_tasks: azure_network_infrastructure.yml

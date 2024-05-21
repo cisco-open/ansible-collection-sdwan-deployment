@@ -1,4 +1,17 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
-# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 ---
+
+galaxy_info:
+  author: Arkadiusz Cichon <acichon@cisco.com>
+  description: Deploy Network resource (VPCs, IGws, subnets etc.) required for Cisco SD-WAN Infrastructure
+  license: GPL-3.0-or-later
+  min_ansible_version: "2.16.6"
+
+  galaxy_tags:
+    - cisco
+    - sdwan
+    - catalystwan
+    - networking
+
+dependencies: []
