@@ -6,13 +6,16 @@ Ansible roles and playbooks for deployment and teardown of Cisco SD-WAN on AWS a
 
 - [Overview](#overview)
 - [Roadmap](#roadmap)
-- [Prerequisites](#prerequisites)
-- [Getting Started](#getting-started)
+- [Requirements](#requirements)
+- [Installing this collection](#installing-this-collection)
+- [Using this collection](#using-this-collection)
 - [Troubleshooting](#troubleshooting)
 - [Useful Links](#useful-links)
 - [Contact Information](#contact-information)
 - [License](#license)
 - [Contributing](#contributing)
+- [Code of Conduct](#code-of-conduct)
+- [Releasing, Versioning and Deprecation](#releasing-versioning-and-deprecation)
 
 ---
 
@@ -69,9 +72,9 @@ Future Goals:
 
 ---
 
-## Prerequisites
+## Requirements
 
-This collection is based on `ansible-core==2.16`, see [ansible-core-support-matrix](https://docs.ansible.com/ansible/latest/reference_appendices/release_and_maintenance.html#ansible-core-support-matrix).
+This collection is based on `ansible-core==2.16.6`, see [ansible-core-support-matrix](https://docs.ansible.com/ansible/latest/reference_appendices/release_and_maintenance.html#ansible-core-support-matrix).
 
 Before you begin, ensure you have met the following requirements:
 
@@ -79,11 +82,19 @@ Before you begin, ensure you have met the following requirements:
 - You have an AWS or Azure account with the necessary permissions
 - You have access to a Cisco SD-WAN AMIs on AWS or images on Azure
 
+### Python dependencies
+
+The python module dependencies are not installed by ansible-galaxy. They can be manually installed using pip:
+
+```bash
+pip install -r requirements.txt
+```
+
 ---
 
-## Getting started
+## Installing this collection
 
-### Using collection in your playbooks
+### Using `requirements.yml`
 
 In `requirements.yml` inside your project add:
 
@@ -110,13 +121,7 @@ At the end always run:
 ansible-galaxy install -r requirements.yml
 ```
 
-### Python dependencies
-
-The python module dependencies are not installed by ansible-galaxy. They can be manually installed using pip:
-
-```bash
-pip install -r requirements.txt
-```
+## Using this collection
 
 ### Prepare your configuration
 
@@ -274,3 +279,11 @@ See [LICENSE](./LICENSE) file.
 ## Contributing
 
 See [Contributing](./docs/CONTRIBUTING.md) file.
+
+## Code of Conduct
+
+See [Code of Conduct](./docs/CODE_OF_CONDUCT.md) file.
+
+## Releasing, Versioning and Deprecation
+
+This collection follows Semantic Versioning. More details on versioning can be found in [Understanding collection versioning](https://docs.ansible.com/ansible/latest/dev_guide/developing_collections_distributing.html#understanding-collection-versioning).

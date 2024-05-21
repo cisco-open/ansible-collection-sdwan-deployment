@@ -18,7 +18,7 @@ cloud_provider: null  # can be either aws or azure
 
 # Cloud-init general configurations
 admin_username: admin
-admin_password: Cisco#123@Viptela
+admin_password: example_password  # pragma: allowlist secret
 vbond_port: 12346
 vbond_transport_private_ip: null
 vbond_transport_public_ip: null
