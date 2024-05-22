@@ -36,7 +36,7 @@ This role provides a systematic approach to tearing down AWS resources, with a s
 - `teardown_resources_data_path`: Path where the teardown data JSON file will be stored.
 - `teardown_only_instances`: Boolean value to indicate if only EC2 instances should be torn down.
 - `teardown_specific_instances`: Boolean value to indicate if specific EC2 instances should be torn down.
-- `aws_region`: AWS region where resources were deployed (default: `us-east-1`).
+- `aws_region`: AWS region where resources were deployed.
 - `aws_availibility_zone`: AWS availability zone used for resource deployment (default: `us-east-1a`).
 - `aws_vpc_name`, `aws_security_group_name`: Names for the VPC and security group to be removed.
 

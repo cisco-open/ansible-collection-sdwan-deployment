@@ -4,7 +4,6 @@
 ---
 
 organization_name: null  # has to be set by user
-aws_key_name: null
 
 
 # Deployment results path

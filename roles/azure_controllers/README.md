@@ -36,8 +36,6 @@ The `azure_controllers` role automates the deployment of Cisco SD-WAN controller
 
 ### Defaults (`defaults/main.yml`)
 
-- `organization_name`: User-defined organization name, used as a prefix for Azure resources.
-- `az_location`: Azure location where resources will be deployed. Must be defined by the user.
 - `az_resources_prefix`: Prefix for Azure resources, defaults to the organization name.
 - `az_resource_group`: Name of the Azure resource group.
 - `az_virtual_network`: Name of the Azure Virtual Network.
@@ -45,9 +43,7 @@ The `azure_controllers` role automates the deployment of Cisco SD-WAN controller
 - `az_subnets`: Definitions for Azure subnets within the Virtual Network.
 - `az_network_security_group`: Name of the Azure Network Security Group.
 - `az_allowed_subnets`: VPN subnets allowed to connect to Azure public IPs.
-- `azure_key_name`: Name of the Azure key for VM access.
-- `admin_username`: Default admin username for deployed VMs.
-- `admin_password`: Default admin password for deployed VMs.
+- 'az_vmanage_image_vhd_source'
 - `az_vmanage_vm_size`, `az_vbond_vm_size`, `az_vsmart_vm_size`: Azure VM sizes for vManage, vBond, and vSmart instances.
 - `site_id_vmanage`, `site_id_vbond`, `site_id_vsmart`: Default site IDs for vManage, vBond, and vSmart instances.
 - `vmanage_instances`, `vbond_instances`, `vsmart_instances`: Lists for instance configurations.

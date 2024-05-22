@@ -14,7 +14,7 @@ organization_name: null  # has to be set by user
 
 
 # Common
-aws_region: us-east-1
+aws_region: null
 aws_resources_prefix: "{{ organization_name }}"
 aws_tag_creator: "{{ organization_name }}"
 aws_availibility_zone: us-east-1a  # we cannot use us-east-1e for c5.9xlarge, therefore we use us-east-1a

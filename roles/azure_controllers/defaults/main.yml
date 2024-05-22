@@ -44,11 +44,9 @@ az_allowed_subnets: null
 #     SD-WAN Instances configuration     #
 ##########################################
 
-azure_key_name: null
-
 # Cloud-init general configurations
 admin_username: admin
-admin_password: example_password  # pragma: allowlist secret
+admin_password: null  # pragma: allowlist secret
 vbond_port: 12346
 default_vbond_ip: 192.168.1.199
 # vpn0_interface_color: default
@@ -61,6 +59,7 @@ default_vbond_ip: 192.168.1.199
 # vManage
 az_vmanage_vm_size: "Standard_F16s_v2"
 site_id_vmanage: 100
+az_vmanage_image_vhd_source: null
 
 vmanage_instances: []
   # - hostname: "{{ az_resources_prefix }}-vManage"
@@ -71,6 +70,7 @@ vmanage_instances: []
 # vBond
 az_vbond_vm_size: "Standard_F4s_v2"
 site_id_vbond: 200
+az_vbond_image_vhd_source: null
 
 vbond_instances: []
   # - hostname: "{{ az_resources_prefix }}-vBond"
@@ -81,6 +81,7 @@ vbond_instances: []
 # vSmart
 az_vsmart_vm_size: "Standard_F4s_v2"
 site_id_vsmart: 300
+az_vsmart_image_vhd_source: null
 
 vsmart_instances: []
   # - hostname: "{{ az_resources_prefix }}-vSmart"
