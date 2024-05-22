@@ -29,8 +29,6 @@ The `template_cloudinit` role executes the following tasks:
 
 Variables with default values that the user may need to override:
 
-- `organization_name`: Mandatory for identifying the organization; used in naming conventions.
-- `aws_key_name`: AWS key name for SSH access to instances, to be provided by the user.
 - `results_dir`: Directory to store generated cloudinit files.
 - `userdata_vmanage_path`, `userdata_vbond_path`, `userdata_vsmart_path`: Paths to templated userdata configurations for respective SD-WAN controllers.
 - `admin_username`, `admin_password`: Default admin credentials used in userdata scripts.

@@ -42,7 +42,6 @@ Variables with default values that can be overridden by the user:
 - `az_resources_prefix`: Prefix for resources, can be customized by the user.
 - `az_resource_group`, `az_virtual_network`, `az_vn_address_prefixes_cidr`, `az_subnets`, `az_network_security_group`: Default configurations for Azure networking resources.
 - `az_allowed_subnets`: VPN subnets allowed for Azure public IP connections. Should be defined by the user.
-- `azure_key_name`: The Azure key for VM access, to be provided by the user.
 - `admin_username`, `admin_password`: Default admin credentials for cEdge instances.
 - `vbond_port`, `default_vbond_ip`: Default configurations for vBond.
 - `az_cedge_vm_size`: Default Azure VM size for cEdge instances.

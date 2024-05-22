@@ -35,14 +35,9 @@ The `aws_edges` role is an essential component of the `cisco.sdwan_deployment` c
 
 ### Defaults (`defaults/main.yml`)
 
-- `organization_name`: Name of the organization. Must be defined by the user.
-- `aws_region`: AWS region where resources will be deployed (default: `us-east-1`).
 - `aws_vpc_name`, `aws_security_group_name`: Defaults for naming VPC and security group resources.
 - `aws_tag_creator`: Tag for identifying the creator of AWS resources.
-- `aws_key_name`: AWS SSH key pair name for EC2 instances.
-- `admin_username`, `admin_password`: Default admin credentials for edge devices.
 - `vbond_port`, `default_vbond_ip`: Default vBond communication settings.
-- `aws_cedge_ami_id`, `aws_cedge_instance_type`: AMI ID and instance type for cEdge devices.
 - `edge_instances`: List of edge device instances to be deployed.
 
 ### Vars (`vars/main.yml`)

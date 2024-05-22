@@ -11,15 +11,13 @@ organization_name: null  # has to be set by user
 ################################################
 
 # Required by gather networking resources
-aws_region: us-east-1
+aws_region: null
 aws_vpc_name: "{{ aws_resources_prefix }}-vpc"
 aws_security_group_name: "{{ aws_resources_prefix }}-sg"
 aws_tag_creator: "{{ organization_name }}"
 
 
 aws_resources_prefix: "{{ organization_name }}"
-
-aws_key_name: null
 
 
 ##########################################
@@ -28,7 +26,7 @@ aws_key_name: null
 
 # Cloud-init general configurations
 admin_username: admin
-admin_password: example_password  # pragma: allowlist secret
+admin_password: null  # pragma: allowlist secret
 vbond_port: 12346
 default_vbond_ip: 192.168.1.199  # default ips from official Cisco guides
 # vpn0_interface_color: default

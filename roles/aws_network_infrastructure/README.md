@@ -34,8 +34,6 @@ This role focuses on creating and configuring the necessary network components i
 
 - `aws_allowed_subnets`: VPN subnets allowed to connect to AWS Elastic IPs.
 - `organization_name`: Name of the organization. Must be defined by the user.
-- `aws_region`: AWS region where resources will be deployed (default: `us-east-1`).
-- `aws_availibility_zone`: AWS availability zone for resource deployment (default: `us-east-1a`).
 - `aws_vpc_name`, `aws_vpc_cidr`: Defaults for naming and CIDR of the VPC.
 - `aws_igw_name`: Name for the AWS Internet Gateway.
 - `aws_subnets`: List of subnet configurations for the VPC.

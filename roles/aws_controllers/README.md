@@ -32,16 +32,11 @@ The `aws_controllers` role automates the deployment of Cisco SD-WAN controllers 
 
 ### Defaults (`defaults/main.yml`)
 
-- `organization_name`: Name of the organization deploying the controllers. Must be defined by the user.
-- `aws_region`: AWS region where resources will be deployed (default: `us-east-1`).
+- `az_network_security_group`: The name of the Azure Network Security Group.
+- `az_subnets`: A list of subnet definitions for the Azure Virtual Network.
 - `aws_vpc_name`, `aws_security_group_name`: Default naming convention for VPC and security group.
 - `aws_tag_creator`: Tag used to mark resources created in AWS.
-- `aws_key_name`: AWS SSH key pair name.
-- `admin_username`, `admin_password`: Default credentials for controllers.
 - `vbond_port`, `default_vbond_ip`: Default port and IP for vBond.
-- `aws_vmanage_ami_id`, `aws_vmanage_instance_type`: AMI ID and instance type for vManage.
-- `aws_vbond_ami_id`, `aws_vbond_instance_type`: AMI ID and instance type for vBond.
-- `aws_vsmart_ami_id`, `aws_vsmart_instance_type`: AMI ID and instance type for vSmart.
 - `site_id_vmanage`, `site_id_vbond`, `site_id_vsmart`: Default site IDs for each controller.
 
 ### Vars (`vars/main.yml`)
@@ -55,6 +50,7 @@ The `aws_controllers` role automates the deployment of Cisco SD-WAN controllers 
 The following variables must be set prior to executing the role:
 
 - `organization_name`: The name of your organization, used as a prefix for Azure resources.
+- `aws_region`: AWS region where resources will be deployed.
 - `az_location`: The Azure region where resources will be deployed.
 - `az_resource_group`: The name of the Azure resource group for the deployment.
 - `az_network_security_group`: The name of the Azure Network Security Group.

@@ -44,8 +44,6 @@ az_allowed_subnets: null
 #     SD-WAN Instances configuration     #
 ##########################################
 
-azure_key_name: null
-
 # Cloud-init general configurations
 admin_username: admin
 admin_password: example_password  # pragma: allowlist secret
