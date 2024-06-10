@@ -62,7 +62,7 @@ vsmart_instances:
 #          Edge devices        #
 ################################
 
-cedge_instances:
+edge_instances:
   - hostname: terraformcedge1
     otp: XXX
     site_id: 1002

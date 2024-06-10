@@ -102,10 +102,10 @@
     vbond: "{{ instance_item.vbond }}"
     template_path: "./userdata_cedge.j2"
     generated_cloudinit_path: "{{ cloudinit_path | default('') }}"
-  loop: "{{ cedge_instances }}"
+  loop: "{{ edge_instances }}"
   loop_control:
     loop_var: instance_item
-  when: cedge_instances is defined
+  when: edge_instances is defined
 
 - name: "Display location of generated files"
   ansible.builtin.debug:
