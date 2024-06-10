@@ -11,17 +11,17 @@ results_dir: "{{ playbook_dir }}/results"
 #     Required configuration data     #
 #######################################
 
-organization_name: null
+organization_name: dummyorg
 resources_prefix: "{{ organization_name }}"
 
 cloud_provider: null  # can be either aws or azure
 
 # Cloud-init general configurations
 admin_username: admin
-admin_password: null  # pragma: allowlist secret
+admin_password: dummypassword  # pragma: allowlist secret
 vbond_port: 12346
-vbond_transport_private_ip: null
-vbond_transport_public_ip: null
+vbond_transport_private_ip: X.X.X.X
+vbond_transport_public_ip: Y.Y.Y.Y
 
 
 ###############################
@@ -62,4 +62,10 @@ vsmart_instances:
 #          Edge devices        #
 ################################
 
-cedge_instances: []
+cedge_instances:
+  - hostname: terraformcedge1
+    otp: XXX
+    site_id: 1002
+    system_ip: 192.168.102.1
+    uuid: XXXX-XXXX-XXXX
+    vbond: 1.1.1.1
