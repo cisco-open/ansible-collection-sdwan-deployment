@@ -12,6 +12,7 @@ profile: production # min, basic, moderate, safety, shared, production
 exclude_paths:
   - .dev_dir/dev_vars.yml
   - .dev_dir/example_dev_vars.yml
+  - .github/workflows/requirements.yml  # due to schema[requirements]
   - playbooks/results/
   - playbooks/aws_sdwan_config*
   - playbooks/azure_sdwan_config*
