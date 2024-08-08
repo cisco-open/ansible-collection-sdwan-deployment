@@ -1,5 +1,5 @@
 # .github/workflows/requirements.yml
-name: Check Python packages installation combatibility
+name: requirements.txt combatibility
 
 on:
   pull_request:
