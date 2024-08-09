@@ -61,13 +61,13 @@ Current coverage:
 - [x] Installation via git repository link
 - [x] Migration to CiscoDevNet/Cisco Open
 - [x] Separate role for cloudinit templating
+- [x] Share roles via Ansible Galaxy
 
 Future Goals:
 
-- [ ] Provide AWX (web-based user interface)
-- [ ] Share roles via Ansible Galaxy
-- [ ] Deployment on GCP
 - [ ] Support for cluster deployment
+- [ ] Provide AWX (web-based user interface)
+- [ ] Deployment on GCP
 - [ ] Enhance cloud-init configuration (complex bringup)
 
 ---
