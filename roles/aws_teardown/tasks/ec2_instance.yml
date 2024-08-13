@@ -5,6 +5,7 @@
 # EC2 Instances
 - name: Gather facts about all instances in VPC
   amazon.aws.ec2_instance_info:
+    region: "{{ aws_region }}"
     filters:
       vpc-id: "{{ aws_vpc_id }}"
       instance-state-name: ["pending", "running", "shutting-down", "stopping", "stopped"]
