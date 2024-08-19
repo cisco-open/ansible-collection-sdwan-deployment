@@ -28,6 +28,7 @@
 
 - name: Gather information about any VPC subnet within VPC with ID
   amazon.aws.ec2_vpc_subnet_info:
+    region: "{{ aws_region }}"
     filters:
       vpc-id: "{{ aws_discovered_vpc.id }}"
   register: aws_subnet_info
