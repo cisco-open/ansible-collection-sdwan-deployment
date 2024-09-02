@@ -30,10 +30,10 @@ az_subnets:
     cidr: "10.0.2.0/24"
     VPN: 0
     type: transport
-  # - name: "{{ az_resources_prefix }}-cluster-subnet-0"
-  #   cidr: "10.0.3.0/24"
-  #   VPN: 0
-  #   type: cluster
+#  - name: "{{ az_resources_prefix }}-cluster-subnet-0"
+#    cidr: "10.0.3.0/24"
+#    VPN: 0
+#    type: cluster
 
 # Security group
 az_network_security_group: "{{ az_resources_prefix }}-nsg"

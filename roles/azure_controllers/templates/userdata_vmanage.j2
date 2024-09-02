@@ -28,7 +28,7 @@ write_files:
 - path: /opt/web-app/etc/persona
   owner: vmanage:vmanage-admin
   permissions: '0644'
-  content: '{"persona":"COMPUTE_AND_DATA"}'
+  content: '{"persona":"{{ vmanage_persona }}"}'
 - path: /etc/default/personality
   content: "vmanage\n"
 - path: /etc/default/inited
