@@ -25,12 +25,15 @@ az_subnets:
   - name: "{{ az_resources_prefix }}-mgmt-subnet-512"
     cidr: "10.0.1.0/24"
     VPN: 512
+    type: mgmt
   - name: "{{ az_resources_prefix }}-transport-subnet-0"
     cidr: "10.0.2.0/24"
     VPN: 0
-  # - name: "{{ az_resources_prefix }}-cluster-subnet-1"
-  #   subnet_cidr: "10.0.3.0/24"
-  #   VPN: 1
+    type: transport
+#  - name: "{{ az_resources_prefix }}-cluster-subnet-0"
+#    cidr: "10.0.3.0/24"
+#    VPN: 0
+#    type: cluster
 
 # Security group
 az_network_security_group: "{{ az_resources_prefix }}-nsg"
@@ -60,6 +63,7 @@ default_vbond_ip: 192.168.1.199
 az_vmanage_vm_size: "Standard_F16s_v2"
 site_id_vmanage: 100
 az_vmanage_image_vhd_source: null
+vmanage_default_persona: "COMPUTE_AND_DATA"
 
 vmanage_instances: []
   # - hostname: "{{ az_resources_prefix }}-vManage"

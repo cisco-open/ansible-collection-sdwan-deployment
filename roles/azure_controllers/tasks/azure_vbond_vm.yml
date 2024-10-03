@@ -3,6 +3,11 @@
 
 ---
 
+- name: "Set facts for subnets used in vManage deployment"
+  ansible.builtin.set_fact:
+    transport_subnet: "{{ az_subnets | selectattr('type', 'equalto', 'transport') | first }}"
+    mgmt_subnet: "{{ az_subnets | selectattr('type', 'equalto', 'mgmt') | first }}"
+
 - name: "Create public IP addresses for machine: {{ hostname }}"
   azure.azcollection.azure_rm_publicipaddress:
     resource_group: "{{ az_resource_group }}"
@@ -14,7 +19,9 @@
       Machine: "{{ hostname }}"
       VPN: "{{ subnet_item.VPN }}"
       Subnet: "{{ subnet_item.name }}"
-  loop: "{{ az_subnets }}"
+  loop:
+    - "{{ transport_subnet }}"
+    - "{{ mgmt_subnet }}"
   loop_control:
     loop_var: subnet_item
   register: public_ip_addresses

@@ -10,11 +10,6 @@ Content-Disposition: attachment; filename="cloud-config"
 
 #cloud-config
 
-chpasswd:
-  expire: false
-  list:
-  - root:root
-  - {{ admin_username }}:{{ admin_password }}
 write_files:
 - path: /etc/default/personality
   content: "vsmart\n"

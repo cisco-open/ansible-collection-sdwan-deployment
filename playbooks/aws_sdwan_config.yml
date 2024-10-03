@@ -37,12 +37,15 @@ aws_subnets:
   - name: "{{ aws_resources_prefix }}-mgmt-subnet-512"
     subnet_cidr: "10.0.1.0/24"  # default ips from official Cisco guides
     VPN: 512
+    type: mgmt
   - name: "{{ aws_resources_prefix }}-transport-subnet-0"
     subnet_cidr: "10.0.2.0/24"  # default ips from official Cisco guides
     VPN: 0
-  # - name: "{{ aws_resources_prefix }}-cluster-subnet-1"
+    type: transport
+  # - name: "{{ aws_resources_prefix }}-cluster-subnet-0"
   #   subnet_cidr: "10.0.3.0/24"
-  #   VPN: 1
+  #   VPN: 0
+  #   type: cluster
 
 # ROUTE TABLEs
 aws_route_table_name: "{{ aws_resources_prefix }}-rtab"

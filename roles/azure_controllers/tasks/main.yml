@@ -58,7 +58,44 @@
     loop_var: instance_item
   when: vbond_instances is defined and (instance_item.hostname not in instances_info or not instances_info[instance_item.hostname])
 
-- name: Deploy vSmart - Create Virtual Machines
+- name: "Check if vbond_transport_public_ip is defined"
+  ansible.builtin.pause:
+    prompt: |
+
+      Current run of playbook will not deploy or redeploy vBond machine.
+      In order to correctly build overlay network, vbond transport public ip is required.
+      Please provide value for vbond_transport_public_ip or leave empty for default one (192.168.1.199)
+
+  when:
+    - vbond_transport_public_ip is not defined
+    - vbond_instances is defined
+    - (vbond_instances | first).hostname in instances_info or instances_info[(vbond_instances | first).hostname]
+  register: user_response
+
+- name: "Verify user input for vbond_transport_public_ip if provided"
+  when:
+    - user_response is defined
+    - user_response.user_input is defined
+  block:
+    - name: "Set vbond_transport_public_ip variable from user input if provided"
+      ansible.builtin.set_fact:
+        vbond_transport_public_ip: "{{ user_response.user_input if user_response.user_input != '' else default_vbond_ip }}"
+
+    - name: "Validate vbond_transport_public_ip input"
+      ansible.builtin.fail:
+        msg: "Invalid input '{{ vbond_transport_public_ip }}'. You must enter valid ip address or leave empty for default."
+      when:
+        - not (vbond_transport_public_ip is ansible.utils.ipv4)
+
+    - name: "Show provided value for vbond_transport_public_ip"
+      ansible.builtin.debug:
+        msg: |
+          User provided value for vbond_transport_public_ip:
+
+          {{ vbond_transport_public_ip }}
+
+
+- name: "Deploy vSmart - Create Virtual Machines"
   ansible.builtin.include_tasks: azure_vsmart_vm.yml
   vars:
     hostname: "{{ instance_item.hostname }}"
@@ -69,24 +106,25 @@
     loop_var: instance_item
   when: vsmart_instances is defined and (instance_item.hostname not in instances_info or not instances_info[instance_item.hostname])
 
-- name: Deploy vManage - Create Virtual Machines
+- name: "Deploy vManage - Create Virtual Machines"
   ansible.builtin.include_tasks: azure_vmanage_vm.yml
   vars:
     hostname: "{{ instance_item.hostname }}"
     system_ip: "{{ instance_item.system_ip }}"
     site_id: "{{ instance_item.site_id }}"
+    persona: "{{ instance_item.persona }}"
   loop: "{{ vmanage_instances }}"
   loop_control:
     loop_var: instance_item
   when: vmanage_instances is defined and (instance_item.hostname not in instances_info or not instances_info[instance_item.hostname])
 
-- name: Extract deployment facts
+- name: "Extract deployment facts"
   ansible.builtin.include_role:
     name: common
     tasks_from: generate_deployment_facts_controllers.yml
   when: deployment_facts.vbond_instances | length > 0 or deployment_facts.vmanage_instances | length > 0 or deployment_facts.vsmart_instances | length > 0
 
-- name: Check reachability of vManage instance with SSH probe
+- name: "Check reachability of vManage instance with SSH probe"
   ansible.builtin.include_role:
     name: common
     tasks_from: wait_for_ssh_readiness
