@@ -40,6 +40,7 @@ default_vbond_ip: 192.168.1.199  # default ips from official Cisco guides
 aws_vmanage_ami_id: null
 aws_vmanage_instance_type: "c5.9xlarge"
 
+vmanage_default_persona: "COMPUTE_AND_DATA"
 site_id_vmanage: 100
 
 vmanage_instances: []

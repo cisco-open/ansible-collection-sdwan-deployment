@@ -63,7 +63,7 @@
     state: present
     vpc_id: "{{ _created_vpc.vpc.id }}"
     cidr: "{{ subnet_config.subnet_cidr }}"
-    map_public: true
+    map_public: "{{ subnet_config.type != 'cluster' }}"
     region: "{{ aws_region }}"
     az: "{{ aws_availibility_zone }}"
     tags:
@@ -115,6 +115,7 @@
     aws_route_tables:
       - "{{ _created_route_table.results[0] }}"
       - "{{ _created_route_table.results[1] }}"
+      - "{{ _created_route_table.results[2] | default(omit) }}"
 
 - name: Copy aws_route_tables resources information to resources file
   ansible.builtin.blockinfile:

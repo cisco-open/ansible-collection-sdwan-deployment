@@ -13,3 +13,4 @@ deployment_results
 playbooks/deployment_results
 playbooks/results
 dev_dir_tmp
+.idea

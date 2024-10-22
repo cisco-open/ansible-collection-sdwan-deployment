@@ -33,7 +33,7 @@ write_files:
 - path: /opt/web-app/etc/persona
   owner: vmanage:vmanage-admin
   permissions: '0644'
-  content: '{"persona":"COMPUTE_AND_DATA"}'
+  content: '{"persona":"{{ vmanage_persona }}"}'
 - path: /etc/default/personality
   content: "vmanage\n"
 - path: /etc/default/inited
@@ -97,4 +97,76 @@ write_files:
         </vpn-instance>
       </vpn>
     </config>
+
+{% if vmanage_cluster_private_ip is defined %}
+- path: /home/admin/customized.cfg
+  content: |
+    vpn 0
+        interface eth2
+            ip address {{ vmanage_cluster_private_ip }}/{{ vmanage_cluster_prefix }}
+            no shutdown
+        !
+    !
+
+bootcmd:
+  - |
+    cat << 'EOF' > /etc/customized.sh
+    #!/bin/bash
+    MAX_WAIT=1800
+    WAIT_TIMER=30
+    MAX_RETRY=20
+    RETRY_TIMER=5
+
+    success_file_name=/home/admin/success.log
+    failure_file_name=/home/admin/failure.log
+
+    start_time=`date +%s`
+    while true
+    do
+        end_time=`date +%s`
+
+        CONFD_IPC_ACCESS_FILE="/etc/confd/confd_ipc_secret"
+        cloud_init_rerun="/home/admin/customized.cfg"
+        export CONFD_IPC_ACCESS_FILE=/etc/confd/confd_ipc_secret
+
+        if [ -f "$CONFD_IPC_ACCESS_FILE" ] && [ -f "$cloud_init_rerun" ];then
+            sleep $WAIT_TIMER
+
+            break_flap=0
+            for retry_timer in `seq $MAX_RETRY`
+            do
+              confd_load -H -dd -lm -e -F c $cloud_init_rerun >> "$success_file_name" 2>&1
+              if [ $? -eq 0 ];then
+                echo success >> "$success_file_name"
+                mv $cloud_init_rerun ${cloud_init_rerun}.bak
+                break_flap=1
+                break
+              fi
+              sleep $RETRY_TIMER
+              echo "Retry: $retry_timer" >> "$success_file_name"
+            done
+
+            if [ $break_flap -eq 0 ];then
+              echo "Load configure error" >> "$success_file_name"
+            else
+              echo "Load configure success" >> "$success_file_name"
+            fi
+
+            break
+        fi
+
+        if [ $((end_time - start_time)) -gt $MAX_WAIT ];then
+            echo "start_time: $start_time" >> "$failure_file_name"
+            echo "end_time: $end_time" >> "$failure_file_name"
+            echo "end_time - start_time: $((end_time - start_time))" >> "$failure_file_name"
+            echo "MAX_WAIT: $MAX_WAIT" >> "$failure_file_name"
+            break
+        fi;
+
+        sleep 0.1
+
+    done
+    EOF
+  - (nohup bash /etc/customized.sh >> /home/admin/customized_config.log 2>&1 )&
+{% endif %}
 --===============8815267485200512281==

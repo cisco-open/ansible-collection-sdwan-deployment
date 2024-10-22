@@ -13,6 +13,7 @@
 
 - name: Terminate all instances in a specific VPC
   amazon.aws.ec2_instance:
+    region: "{{ aws_region }}"
     state: terminated
     instance_ids: "{{ instance_item.instance_id }}"
   loop: "{{ ec2_info.instances }}"
