@@ -186,7 +186,7 @@
 
 - name: Update security group rules to handle cluster traffic
   ansible.builtin.set_fact:
-    vmanage_interfaces: "{{ sg_rules + [{'proto': 'all', 'cidr_ip': vmanage_cluster_private_ip + '/32', 'rule_desc': hostname + ' - cluster (VPN 0)'}] }}"
+    sg_rules: "{{ sg_rules + [{'proto': 'all', 'cidr_ip': vmanage_cluster_private_ip + '/32', 'rule_desc': hostname + ' - cluster (VPN 0)'}] }}"
   when: vmanage_cluster_private_ip is defined
 
 - name: Configure security group
