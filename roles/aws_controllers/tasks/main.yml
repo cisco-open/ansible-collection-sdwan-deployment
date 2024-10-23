@@ -83,6 +83,7 @@
     hostname: "{{ instance_item.hostname }}"
     system_ip: "{{ instance_item.system_ip }}"
     site_id: "{{ instance_item.site_id }}"
+    persona: "{{ instance_item.persona }}"
   loop: "{{ vmanage_instances }}"
   loop_control:
     loop_var: instance_item

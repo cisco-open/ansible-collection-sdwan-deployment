@@ -144,9 +144,15 @@
     vmanage_transport_private_ip: "{{ az_transport_nic.ip_configuration.private_ip_address }}"
     vmanage_mgmt_public_ip: "{{ az_mgmt_public_ip.ip_address }}"
     vmanage_transport_public_ip: "{{ az_transport_public_ip.ip_address }}"
-    vmanage_cluster_private_ip: "{{ az_cluster_nic.ip_configuration.private_ip_address | default(omit) }}"
-    vmanage_cluster_prefix: "{{ cluster_subnet.cidr | ansible.utils.ipaddr('prefix') | default(omit) }}"
     vmanage_persona: "{{ persona | default(vmanage_default_persona) }}"
+
+- name: "Set vmanage cluster related facts"
+  ansible.builtin.set_fact:
+    vmanage_cluster_private_ip: "{{ az_cluster_nic.ip_configuration.private_ip_address }}"
+    vmanage_cluster_prefix: "{{ cluster_subnet.cidr | ansible.utils.ipaddr('prefix') }}"
+  when:
+    - az_cluster_nic is defined
+    - cluster_subnet is defined
 
 - name: "Set vpn0_default_gateway fact from VPN 0 subnet value"
   ansible.builtin.set_fact:

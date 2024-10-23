@@ -20,8 +20,8 @@
       VPN: "{{ subnet_item.VPN }}"
       Subnet: "{{ subnet_item.name }}"
   loop:
-    - "{{ transport_subnet }}"
     - "{{ mgmt_subnet }}"
+    - "{{ transport_subnet }}"
   loop_control:
     loop_var: subnet_item
   register: public_ip_addresses
