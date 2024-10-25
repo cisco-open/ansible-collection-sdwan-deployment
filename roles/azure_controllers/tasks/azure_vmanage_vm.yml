@@ -22,8 +22,8 @@
       Subnet: "{{ subnet_item.name }}"
       type: "{{ subnet_item.type }}"
   loop:
-    - "{{ transport_subnet }}"
     - "{{ mgmt_subnet }}"
+    - "{{ transport_subnet }}"
   loop_control:
     loop_var: subnet_item
   register: public_ip_addresses
@@ -127,16 +127,15 @@
 - name: "Set NICs IDs to be consumed by VM creation"
   ansible.builtin.set_fact:
     nics_ids_list: "{{ nics_ids_list + [nic_item.id] }}"
-  loop:
-    - "{{ az_mgmt_nic }}"
-    - "{{ az_transport_nic }}"
-    - "{{ az_cluster_nic }}"
+  loop: >
+    {{
+        [az_mgmt_nic, az_transport_nic]
+        + ([az_cluster_nic] if az_cluster_nic is defined else [])
+    }}
   loop_control:
     loop_var: nic_item
     label: "{{ nic_item.id | default(omit) }}"
-  when:
-    - nic_item is defined
-    - nic_item.id is defined
+  when: nic_item.id is defined
 
 - name: "Set vmanage facts"
   ansible.builtin.set_fact:
@@ -225,7 +224,7 @@
       admin_password: "{{ admin_password }}"
       mgmt_public_ip: "{{ vmanage_mgmt_public_ip }}"
       transport_public_ip: "{{ vmanage_transport_public_ip }}"
-      cluster_private_ip: "{{ vmanage_cluster_private_ip }}"
+      cluster_private_ip: "{{ vmanage_cluster_private_ip | default(omit) }}"
       persona: "{{ vmanage_persona }}"
   changed_when: true
   notify: Show deployment_facts
