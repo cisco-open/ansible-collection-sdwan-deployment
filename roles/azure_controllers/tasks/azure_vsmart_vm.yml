@@ -101,7 +101,9 @@
 - name: "Set vpn0_default_gateway fact from VPN 0 subnet value"
   ansible.builtin.set_fact:
     vpn0_default_gateway: "{{ subnet_item.cidr | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') }}"
-  loop: "{{ az_subnets }}"
+  loop:
+    - "{{ mgmt_subnet }}"
+    - "{{ transport_subnet }}"
   loop_control:
     loop_var: subnet_item
   when: subnet_item.VPN == 0
