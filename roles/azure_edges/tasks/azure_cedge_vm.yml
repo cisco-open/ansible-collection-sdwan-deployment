@@ -107,7 +107,7 @@
     loop_var: subnet
   when:
     - subnet.VPN == 0
-    - subnet.type =! "cluster"
+    - subnet.type != "cluster"
 
 - name: "Set path for bootstrap configuration: {{ userdata_cedge_path }}-{{ hostname }}"
   ansible.builtin.set_fact:
