@@ -3,10 +3,10 @@
 
 ---
 
-- name: "Wait for device ssh server readiness, timeout in seconds: {{ ssh_readiness_timeout | default(600) }}"
+- name: "Wait for device ssh server readiness, timeout in seconds: {{ ssh_readiness_timeout | default(900) }}"
   ansible.builtin.wait_for:
     delay: "{{ ssh_readiness_delay | default(60) }}"
-    timeout: "{{ ssh_readiness_timeout | default(600) }}"
+    timeout: "{{ ssh_readiness_timeout | default(900) }}"
     state: started
     host: "{{ instance_item.mgmt_public_ip }}"
     port: 22
