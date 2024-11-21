@@ -166,6 +166,8 @@
       admin_password: "{{ admin_password }}"
       mgmt_public_ip: "{{ cedge_mgmt_public_ip }}"
       transport_public_ip: "{{ cedge_transport_public_ip }}"
+      uuid: "{{ uuid }}"
+      site_id: "{{ site_id }}"
   changed_when: true
   notify: Show deployment_facts
 
