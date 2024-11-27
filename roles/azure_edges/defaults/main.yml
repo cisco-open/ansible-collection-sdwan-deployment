@@ -21,7 +21,8 @@ az_virtual_network: "{{ az_resources_prefix }}-vn"
 az_vn_address_prefixes_cidr: 10.0.0.0/16
 
 # Subnets
-az_subnets:
+az_subnets: |
+  {% filter from_yaml %}
   - name: "{{ az_resources_prefix }}-mgmt-subnet-512"
     cidr: "10.0.1.0/24"
     VPN: 512
@@ -30,10 +31,19 @@ az_subnets:
     cidr: "10.0.2.0/24"
     VPN: 0
     type: transport
-  # - name: "{{ az_resources_prefix }}-cluster-subnet-0"
-  #   cidr: "10.0.3.0/24"
-  #   VPN: 0
-  #   type: cluster
+  {% if vmanage_instances is defined and vmanage_instances | length > 2 %}
+  - name: "{{ az_resources_prefix }}-cluster-subnet-0"
+    cidr: "10.0.3.0/24"
+    VPN: 0
+    type: cluster
+  {% endif %}
+  {% if ux20_deployment is defined and ux20_deployment == true %}
+  - name: "{{ az_resources_prefix }}-service-subnet-10"
+    cidr: "10.0.4.0/24"  # default ips from official Cisco guides
+    VPN: 10
+    type: service
+  {% endif %}
+  {% endfilter %}
 
 # Security group
 az_network_security_group: "{{ az_resources_prefix }}-nsg"

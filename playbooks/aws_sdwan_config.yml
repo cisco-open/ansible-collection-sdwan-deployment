@@ -33,7 +33,8 @@ aws_vpc_cidr: 10.0.0.0/16  # default ips from official Cisco guides
 aws_igw_name: "{{ aws_resources_prefix }}-igw"
 
 # SUBNETs
-aws_subnets:
+aws_subnets: |
+  {% filter from_yaml %}
   - name: "{{ aws_resources_prefix }}-mgmt-subnet-512"
     subnet_cidr: "10.0.1.0/24"  # default ips from official Cisco guides
     VPN: 512
@@ -42,10 +43,19 @@ aws_subnets:
     subnet_cidr: "10.0.2.0/24"  # default ips from official Cisco guides
     VPN: 0
     type: transport
-  # - name: "{{ aws_resources_prefix }}-cluster-subnet-0"
-  #   subnet_cidr: "10.0.3.0/24"
-  #   VPN: 0
-  #   type: cluster
+  {% if vmanage_instances is defined and vmanage_instances | length > 2 %}
+  - name: "{{ aws_resources_prefix }}-cluster-subnet-0"
+    subnet_cidr: "10.0.3.0/24"
+    VPN: 0
+    type: cluster
+  {% endif %}
+  {% if ux20_deployment is defined and ux20_deployment == true %}
+  - name: "{{ aws_resources_prefix }}-service-subnet-10"
+    subnet_cidr: "10.0.4.0/24"  # default ips from official Cisco guides
+    VPN: 10
+    type: service
+  {% endif %}
+  {% endfilter %}
 
 # ROUTE TABLEs
 aws_route_table_name: "{{ aws_resources_prefix }}-rtab"
