@@ -43,6 +43,12 @@ aws_subnets: |
     VPN: 0
     type: cluster
   {% endif %}
+  {% if ux20_deployment is defined and ux20_deployment == true %}
+  - name: "{{ aws_resources_prefix }}-service-subnet-10"
+    subnet_cidr: "10.0.4.0/24"  # default ips from official Cisco guides
+    VPN: 10
+    type: service
+  {% endif %}
   {% endfilter %}
 
 # ROUTE TABLEs

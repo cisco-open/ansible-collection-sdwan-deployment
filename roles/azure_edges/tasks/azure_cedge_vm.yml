@@ -19,6 +19,7 @@
       Machine: "{{ hostname }}"
       VPN: "{{ subnet_item.VPN }}"
       Subnet: "{{ subnet_item.name }}"
+      type: "{{ subnet_item.type }}"
   loop:
     - "{{ mgmt_subnet }}"
     - "{{ transport_subnet }}"
@@ -72,6 +73,7 @@
       Creator: "{{ az_tag_creator }}"
       Organization: "{{ organization_name }}"
       VPN: "{{ public_ip_state.state.tags.VPN }}"
+      type: "{{ public_ip_state.state.tags.type }}"
   loop: "{{ public_ip_addresses.results }}"
   loop_control:
     loop_var: public_ip_state
@@ -79,17 +81,47 @@
     label: public_ip_state.state.name
   register: cedge_nics
 
+- name: "Create private virtual network interface cards"
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: "{{ az_resource_group }}"
+    name: "nic-{{ hostname }}-vpn-{{ subnet.VPN }}"
+    virtual_network: "{{ az_virtual_network }}"
+    subnet_name: "{{ subnet.name }}"
+    security_group: "{{ az_network_security_group }}"
+    ip_configurations:
+      - name: "ipconfig-vpn-{{ subnet.VPN }}"
+        private_ip_allocation_method: "Dynamic"
+    tags:
+      Name: "nic-{{ hostname }}-vpn-{{ subnet.VPN }}"
+      Creator: "{{ az_tag_creator }}"
+      Organization: "{{ organization_name }}"
+      VPN: "{{ subnet.VPN }}"
+      type: "{{ subnet.type }}"
+  loop: "{{ az_subnets }}"
+  loop_control:
+    loop_var: subnet
+    index_var: my_idx
+    label: subnet.name
+  register: cedge_private_nics
+  when: subnet.type == "service"
+
 - name: Set az_network_interfaces_cedge fact with a list of interfaces for cedge
   ansible.builtin.set_fact:
     az_network_interfaces_cedge: "{{ cedge_nics.results | map(attribute='state') | list }}"
+    az_private_network_interfaces_cedge: "{{ cedge_private_nics.results | selectattr('state', 'defined') | map(attribute='state') | list | default([]) }}"
     az_public_ip_addresses_cedge: "{{ public_ip_addresses.results | map(attribute='state') | list }}"
+
+- name: Append to az_network_interfaces_cedge
+  ansible.builtin.set_fact:
+    az_network_interfaces_cedge: "{{ az_network_interfaces_cedge + az_private_network_interfaces_cedge }}"
 
 - name: Filter az_network_interfaces_cedge for instance creation. Set az_mgmt_nic and az_transport_nic facts
   ansible.builtin.set_fact:
-    az_mgmt_nic: "{{ az_network_interfaces_cedge | selectattr('tags.VPN', 'equalto', '512') | list | first }}"
-    az_transport_nic: "{{ az_network_interfaces_cedge | selectattr('tags.VPN', 'equalto', '0') | list | first }}"
-    az_mgmt_public_ip: "{{ az_public_ip_addresses_cedge | selectattr('tags.VPN', 'equalto', '512') | list | first }}"
-    az_transport_public_ip: "{{ az_public_ip_addresses_cedge | selectattr('tags.VPN', 'equalto', '0') | list | first }}"
+    az_mgmt_nic: "{{ az_network_interfaces_cedge | selectattr('tags.type', 'equalto', 'mgmt') | list | first }}"
+    az_transport_nic: "{{ az_network_interfaces_cedge | selectattr('tags.type', 'equalto', 'transport') | list | first }}"
+    az_service_nics: "{{ az_network_interfaces_cedge | selectattr('tags.type', 'equalto', 'service') | list | default(omit) }}"
+    az_mgmt_public_ip: "{{ az_public_ip_addresses_cedge | selectattr('tags.type', 'equalto', 'mgmt') | list | first }}"
+    az_transport_public_ip: "{{ az_public_ip_addresses_cedge | selectattr('tags.type', 'equalto', 'transport') | list | first }}"
 
 # cedge_mgmt_private_ip
 - name: "Set ip addresses cedge facts"
@@ -120,6 +152,18 @@
     dest: "{{ generated_userdata_cedge }}"
     mode: "0644"
 
+- name: "Set network_interfaces fact"
+  ansible.builtin.set_fact:
+    network_interfaces: "{{ [az_mgmt_nic.id, az_transport_nic.id] }}"
+
+- name: "Append service NICs to network_interfaces fact"
+  ansible.builtin.set_fact:
+    network_interfaces: "{{ network_interfaces + [service_nic.id] }}"
+  loop: "{{ az_service_nics }}"
+  loop_control:
+    loop_var: service_nic
+  when: az_service_nics is defined
+
 - name: "Create cedge VM: {{ hostname }}"
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ az_resource_group }}"
@@ -136,9 +180,7 @@
     ephemeral_os_disk: false
     linux_config:
       disable_password_authentication: false
-    network_interfaces:
-      - "{{ az_mgmt_nic.id }}"
-      - "{{ az_transport_nic.id }}"
+    network_interfaces: "{{ network_interfaces }}"
     image:
       offer: "{{ az_cedge_image_offer }}"
       publisher: "{{ az_cedge_image_publisher }}"
@@ -157,6 +199,19 @@
       Organization: "{{ organization_name }}"
     custom_data: "{{ lookup('file', generated_userdata_cedge) }}"
 
+- name: Set service_interfaces fact
+  ansible.builtin.set_fact:
+    service_interfaces: []
+
+- name: Append to service_interfaces
+  ansible.builtin.set_fact:
+    service_interfaces: "{{ service_interfaces + [{'addr': nic.ip_configuration.private_ip_address, 'index': index + 2}] }}"
+  loop: "{{ az_service_nics }}"
+  loop_control:
+    loop_var: nic
+    index_var: index
+  when: az_service_nics is defined
+
 - name: Store cEdge instance details for deployment_results
   ansible.builtin.set_fact:
     instance:
@@ -166,6 +221,9 @@
       admin_password: "{{ admin_password }}"
       mgmt_public_ip: "{{ cedge_mgmt_public_ip }}"
       transport_public_ip: "{{ cedge_transport_public_ip }}"
+      service_interfaces: "{{ service_interfaces | default(omit) }}"
+      uuid: "{{ uuid }}"
+      site_id: "{{ site_id }}"
   changed_when: true
   notify: Show deployment_facts
 

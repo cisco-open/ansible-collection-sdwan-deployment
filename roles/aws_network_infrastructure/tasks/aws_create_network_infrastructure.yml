@@ -63,13 +63,14 @@
     state: present
     vpc_id: "{{ _created_vpc.vpc.id }}"
     cidr: "{{ subnet_config.subnet_cidr }}"
-    map_public: "{{ subnet_config.type != 'cluster' }}"
+    map_public: "{{ subnet_config.type in ['mgmt', 'transport'] }}"
     region: "{{ aws_region }}"
     az: "{{ aws_availibility_zone }}"
     tags:
       Name: "{{ subnet_config.name }}"
       Creator: "{{ aws_tag_creator }}"
       VPN: "{{ subnet_config.VPN }}"
+      type: "{{ subnet_config.type }}"
   register: _created_subnets
   loop: "{{ aws_subnets }}"
   loop_control:

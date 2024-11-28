@@ -14,8 +14,8 @@
 # NICs
 - name: Filter required subnets for instance creation. Set aws_mgmt_subnet and aws_transport_subnet facts
   ansible.builtin.set_fact:
-    aws_mgmt_subnet: "{{ aws_subnets_config | selectattr('tags.VPN', 'equalto', '512') | list | first }}"
-    aws_transport_subnet: "{{ aws_subnets_config | selectattr('tags.VPN', 'equalto', '0') | list | first }}"
+    aws_mgmt_subnet: "{{ aws_subnets_config | selectattr('tags.type', 'equalto', 'mgmt') | list | first }}"
+    aws_transport_subnet: "{{ aws_subnets_config | selectattr('tags.type', 'equalto', 'transport') | list | first }}"
 
 - name: Create network interfaces for cedge
   amazon.aws.ec2_eni:
@@ -28,11 +28,13 @@
       Creator: "{{ aws_tag_creator }}"
       Machine: "{{ hostname }}"
       VPN: "{{ subnet_item.tags.VPN }}"
+      type: "{{ subnet_item.tags.type }}"
   register: network_interfaces_cedge
-  loop: "{{ [aws_mgmt_subnet, aws_transport_subnet] }}"
+  loop: "{{ aws_subnets_config }}"
   loop_control:
     loop_var: subnet_item
     label: "nic-{{ subnet_item.tags.Name }}"
+  when: subnet_item.tags.type != "cluster"
 
 - name: Set aws_network_interfaces fact with a list of interfaces for cEdge device
   ansible.builtin.set_fact:
@@ -40,9 +42,9 @@
 
 - name: Filter aws_network_interfaces for instance creation. Set aws_mgmt_nic and aws_transport_nic facts
   ansible.builtin.set_fact:
-    aws_mgmt_nic: "{{ aws_network_interfaces | selectattr('tags.VPN', 'equalto', '512') | list | first }}"
-    aws_transport_nic: "{{ aws_network_interfaces | selectattr('tags.VPN', 'equalto', '0') | list | first }}"
-
+    aws_mgmt_nic: "{{ aws_network_interfaces | selectattr('tags.type', 'equalto', 'mgmt') | list | first }}"
+    aws_transport_nic: "{{ aws_network_interfaces | selectattr('tags.type', 'equalto', 'transport') | list | first }}"
+    aws_service_nics: "{{ aws_network_interfaces | selectattr('tags.type', 'equalto', 'service') | list | default(omit) }}"
 
 # EIPs
 - name: Associate EIP with mgmt network interface
@@ -57,7 +59,7 @@
       Machine: "{{ hostname }}"
       VPN: "{{ interface_item.tags.VPN }}"
   register: eip_edge
-  loop: "{{ [aws_mgmt_nic, aws_transport_nic] }}"  # We do loop starting with mgmt nic, so we know results[0] is mgmt ip
+  loop: "{{ [aws_mgmt_nic, aws_transport_nic] + (aws_service_nics | default([])) }}"  # We do loop starting with mgmt nic, so we know results[0] is mgmt ip
   loop_control:
     loop_var: interface_item
     label: "eip-for-{{ interface_item.tags.Name }}"
@@ -79,7 +81,25 @@
     mode: "0644"
 
 
-# vManage
+- name: Set interfaces fact
+  ansible.builtin.set_fact:
+    interfaces:
+      - id: "{{ aws_mgmt_nic.id }}"
+        device_index: 0
+        description: "{{ aws_mgmt_nic.tags.Name }}"
+      - id: "{{ aws_transport_nic.id }}"
+        device_index: 1
+        description: "{{ aws_transport_nic.tags.Name }}"
+
+- name: Append service interfaces
+  ansible.builtin.set_fact:
+    interfaces: "{{ interfaces + [{'id': nic.id, 'device_index': index + 2, 'description': nic.tags.Name}] }}"
+  loop: "{{ (aws_service_nics | default([])) }}"
+  loop_control:
+    index_var: index
+    loop_var: nic
+  when: aws_service_nics is defined
+
 - name: Launch cedge
   amazon.aws.ec2_instance:
     count: 1
@@ -92,13 +112,7 @@
     key_name: "{{ aws_key_name | default('') | bool | ternary(aws_key_name, omit) }}"
     network:
       assign_public_ip: false
-      interfaces:
-        - id: "{{ aws_mgmt_nic.id }}"
-          device_index: 0
-          description: "{{ aws_mgmt_nic.tags.Name }}"
-        - id: "{{ aws_transport_nic.id }}"
-          device_index: 1
-          description: "{{ aws_transport_nic.tags.Name }}"
+      interfaces: "{{ interfaces }}"
     name: "{{ hostname }}"
     tags:
       Name: "{{ hostname }}"
@@ -111,6 +125,19 @@
           delete_on_termination: true
   register: ec2_cedge
 
+- name: Set service_interfaces fact
+  ansible.builtin.set_fact:
+    service_interfaces: []
+
+- name: Append to service_interfaces
+  ansible.builtin.set_fact:
+    service_interfaces: "{{ service_interfaces + [{'addr': nic.private_ip_address, 'index': index + 2}] }}"
+  loop: "{{ aws_service_nics }}"
+  loop_control:
+    loop_var: nic
+    index_var: index
+  when: aws_service_nics is defined
+
 - name: Store cEdge instance details for deployment_results
   ansible.builtin.set_fact:
     instance:
@@ -120,7 +147,9 @@
       admin_password: "{{ admin_password }}"
       mgmt_public_ip: "{{ eip_edge.results[0].public_ip }}"
       transport_public_ip: "{{ eip_edge.results[1].public_ip }}"
+      service_interfaces: "{{ service_interfaces | default(omit) }}"
       uuid: "{{ uuid }}"
+      site_id: "{{ site_id }}"
   changed_when: true
   register: _edge_facts
   retries: 3
