@@ -3,9 +3,19 @@
 
 ---
 
-required_variables:
-  organization_name: "{{ organization_name }}"
-  admin_username: "{{ admin_username }}"
-  admin_password: "{{ admin_password }}"
-  vbond_transport_private_ip: "{{ vbond_transport_private_ip }}"
-  vbond_transport_public_ip: "{{ vbond_transport_public_ip }}"
+required_variables: "{{ (required_variables_options['core']
+  | combine(required_variables_options['vbond'] if vbond_instances | default({}) else {})
+  | combine(required_variables_options['vmanage'] if vmanage_instances | default({}) else {})
+  | combine(required_variables_options['vsmart'] if vsmart_instances | default({}) else {})) }}"
+
+required_variables_options:
+  core:
+    organization_name: "{{ organization_name }}"
+    admin_username: "{{ admin_username }}"
+    admin_password: "{{ admin_password }}"
+  vbond:
+    vbond_transport_private_ip: "{{ vbond_transport_private_ip }}"
+  vmanage:
+    vbond_transport_public_ip: "{{ vbond_transport_public_ip }}"
+  vsmart:
+    vbond_transport_public_ip: "{{ vbond_transport_public_ip }}"
