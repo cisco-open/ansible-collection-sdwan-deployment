@@ -6,10 +6,10 @@ authors:
   - Arkadiusz Cichon <acichon@cisco.com>
 description: Ansible collection to deploy Cisco SD-WAN on AWS and Azure
 
-repository: https://github.com/cisco-open/ansible-collection-sdwan-deployment
-documentation: https://github.com/cisco-open/ansible-collection-sdwan-deployment/blob/main/README.md
-homepage: https://github.com/cisco-open/ansible-collection-sdwan-deployment
-issues: https://github.com/cisco-open/ansible-collection-sdwan-deployment/issues
+repository: https://github.com/cisco-en-programmability/ansible-collection-sdwan-deployment
+documentation: https://github.com/cisco-en-programmability/ansible-collection-sdwan-deployment/blob/main/README.md
+homepage: https://github.com/cisco-en-programmability/ansible-collection-sdwan-deployment
+issues: https://github.com/cisco-en-programmability/ansible-collection-sdwan-deployment/issues
 
 license:
   - "GPL-3.0-only"

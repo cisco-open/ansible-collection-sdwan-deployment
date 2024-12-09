@@ -65,7 +65,7 @@ The `azure_controllers` role automates the deployment of Cisco SD-WAN controller
 
 ## Example Playbook
 
-See [Example playbooks](https://github.com/cisco-open/ansible-collection-sdwan-deployment/tree/main/playbooks).
+See [Example playbooks](https://github.com/cisco-en-programmability/ansible-collection-sdwan-deployment/tree/main/playbooks).
 
 These playbook reuse configuration files that might be used as example for your configuration.
 

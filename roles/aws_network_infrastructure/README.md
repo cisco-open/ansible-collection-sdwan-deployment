@@ -57,7 +57,7 @@ Before running the role, define the following variables:
 
 ## Example Playbook
 
-See [Example playbooks](https://github.com/cisco-open/ansible-collection-sdwan-deployment/tree/main/playbooks).
+See [Example playbooks](https://github.com/cisco-en-programmability/ansible-collection-sdwan-deployment/tree/main/playbooks).
 
 ## License
 
