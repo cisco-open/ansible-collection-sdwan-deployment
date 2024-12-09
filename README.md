@@ -99,7 +99,7 @@ pip install -r requirements.txt
 In `requirements.yml` inside your project add:
 
 ```yml
-- name: git@github.com:cisco-open/ansible-collection-sdwan-deployment.git
+- name: git@github.com:cisco-en-programmability/ansible-collection-sdwan-deployment.git
   type: git
   version: main
 ```
