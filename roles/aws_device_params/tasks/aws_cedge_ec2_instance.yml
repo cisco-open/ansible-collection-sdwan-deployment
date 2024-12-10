@@ -1,0 +1,48 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+- name: Get EIPs associated with the cEdge instances
+  amazon.aws.ec2_eip_info:
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Creator": "{{ aws_tag_creator }}"
+      tag:Machine: "*{{ hostname }}*"
+  register: eip_info
+
+- name: Extract management public IP
+  ansible.builtin.set_fact:
+    mgmt_public_ip: "{{ (eip_info.addresses | selectattr('tags.VPN', 'equalto', '512') | map(attribute='public_ip') | first) | default(None) }}"
+    transport_public_ip: "{{ (eip_info.addresses | selectattr('tags.VPN', 'equalto', '0') | map(attribute='public_ip') | first) | default(None) }}"
+
+- name: Set service_interfaces fact
+  ansible.builtin.set_fact:
+    service_interfaces: []
+    last_index: 2
+
+- name: Append to service_interfaces
+  ansible.builtin.set_fact:
+    service_interfaces: "{{ service_interfaces + [{'addr': eip.private_ip_address, 'index': last_index}] }}"
+    last_index: "{{ last_index | int + 1 }}"
+  loop: "{{ eip_info.addresses }}"
+  loop_control:
+    loop_var: eip
+  when:
+    - eip.tags.VPN != '512'
+    - eip.tags.VPN != '0'
+
+- name: Set instance fact
+  ansible.builtin.set_fact:
+    instance:
+      hostname: "{{ hostname }}"
+      admin_username: "admin"
+      admin_password: "{{ admin_password }}"
+      mgmt_public_ip: "{{ mgmt_public_ip }}"
+      transport_public_ip: "{{ transport_public_ip }}"
+      service_interfaces: "{{ service_interfaces }}"
+
+- name: Update deployment facts
+  ansible.builtin.set_fact:
+    deployment_facts:
+      deployed_edge_instances: "{{ deployment_facts.deployed_edge_instances + [instance] }}"

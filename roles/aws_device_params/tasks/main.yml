@@ -1,0 +1,53 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+- name: Gather network resources information
+  ansible.builtin.include_role:
+    name: cisco.sdwan_deployment.aws_network_infrastructure
+    tasks_from: aws_gather_network_resources.yml
+
+- name: Gather information about EC2 instances with 'cedge' in their name
+  amazon.aws.ec2_instance_info:
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Creator": "{{ aws_tag_creator }}"
+      "tag:Name": "*vManage*"
+  register: vmanage_ec2_info
+
+- name: Get EIPs associated with the vManage instances
+  amazon.aws.ec2_eip_info:
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Creator": "{{ aws_tag_creator }}"
+      tag:Machine: "*{{ vmanage_ec2_info.instances | map(attribute='tags.Name') | list | first }}*"
+  register: vmanage_eip_info
+
+- name: Set manager authentication fact
+  ansible.builtin.set_fact:
+    manager_authentication:
+      url: "{{ vmanage_eip_info.addresses | selectattr('tags.VPN', 'equalto', '512') | map(attribute='public_ip') | first }}"
+      username: "admin"
+      password: "{{ admin_password }}"
+
+- name: Define deployment facts
+  ansible.builtin.set_fact:
+    deployment_facts:
+      deployed_edge_instances: []
+
+- name: Gather information about EC2 instances with 'cedge' in their name
+  amazon.aws.ec2_instance_info:
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Creator": "{{ aws_tag_creator }}"
+      "tag:Name": "*cedge*"
+  register: cedge_ec2_info
+
+- name: Get params for cEdge
+  ansible.builtin.include_tasks: aws_cedge_ec2_instance.yml
+  vars:
+    hostname: "{{ host }}"
+  loop: "{{ cedge_ec2_info.instances | map(attribute='tags.Name') | list }}"
+  loop_control:
+    loop_var: host
