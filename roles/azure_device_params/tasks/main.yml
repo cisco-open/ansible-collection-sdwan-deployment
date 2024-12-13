@@ -1,0 +1,46 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+---
+
+- name: Verify if user session with Azure is active
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: az_user_session_probe
+
+- name: Gather public IP addresses
+  azure.azcollection.azure_rm_publicipaddress_info:
+    resource_group: "{{ az_resource_group }}"
+  register: public_ip_info
+
+- name: Set manager authentication fact
+  ansible.builtin.set_fact:
+    manager_authentication:
+      url: "{{ public_ip_info.publicipaddresses |
+            selectattr('tags.Machine', 'search', 'vManage') |
+            selectattr('tags.type', 'equalto', 'mgmt') |
+            map(attribute='ip_address') |
+            list | first }}"
+      username: "admin"
+      password: "{{ admin_password }}"
+
+- name: Get all VMs
+  azure.azcollection.azure_rm_virtualmachine_info:
+    resource_group: "{{ az_resource_group }}"
+  register: vm_info
+
+- name: Filter cedge VMs
+  ansible.builtin.set_fact:
+    cedge_vms: "{{ vm_info.vms | selectattr('name', 'search', 'cedge') | list }}"
+
+- name: Define deployment facts
+  ansible.builtin.set_fact:
+    deployment_facts:
+      deployed_edge_instances: []
+
+- name: Get params for cEdge
+  ansible.builtin.include_tasks: az_cedge_ec2_instance.yml
+  vars:
+    hostname: "{{ item.name }}"
+    public_ips: "{{ public_ip_info.publicipaddresses | selectattr('tags.Machine', 'equalto', item.name) | list }}"
+  loop: "{{ cedge_vms }}"
