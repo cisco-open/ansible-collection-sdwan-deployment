@@ -27,7 +27,11 @@ exclude_paths:
 verbosity: 1
 
 # # Mock modules or roles in order to pass ansible-playbook --syntax-check
-# mock_modules:
+mock_modules:
+  - amazon.aws.ec2_instance_info
+  - amazon.aws.ec2_eip_info
+  - azure.azcollection.azure_rm_publicipaddress_info
+  - azure.azcollection.azure_rm_virtualmachine_info
 #   - zuul_return
 #   # note the foo.bar is invalid as being neither a module or a collection
 #   - fake_namespace.fake_collection.fake_module
